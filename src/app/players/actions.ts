@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import {
   createPlayer,
@@ -64,7 +65,9 @@ export async function updatePlayerAction(
   if (!result.success) {
     return {
       success: false,
-      error: result.error.issues[0]?.message ?? "Invalid player data.",
+      error:
+        result.error.issues[0]?.message ??
+        "Invalid player data.",
     };
   }
 
@@ -96,7 +99,6 @@ export async function deletePlayerAction(id: string) {
     await deletePlayer(id);
 
     revalidatePath("/players");
-    revalidatePath(`/players/${id}`);
 
     return {
       success: true,

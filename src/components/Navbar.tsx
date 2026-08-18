@@ -7,6 +7,10 @@ const navigation = [
     href: "/tournaments",
   },
   {
+    label: "Teams",
+    href: "/teams",
+  },
+  {
     label: "Players",
     href: "/players",
   },

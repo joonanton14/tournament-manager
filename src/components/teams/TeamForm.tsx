@@ -3,28 +3,25 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
-    addPlayerAction,
-    updatePlayerAction,
-} from "@/app/players/actions";
-import type { Player } from "@/types";
+    addTeamAction,
+    updateTeamAction,
+} from "@/app/teams/actions";
+import type { Team } from "@/types";
 
-type PlayerFormProps = {
-    player?: Player;
+type TeamFormProps = {
+    team?: Team;
     onSuccess?: () => void;
 };
 
-export function PlayerForm({
-    player,
+export function TeamForm({
+    team,
     onSuccess,
-}: PlayerFormProps) {
+}: TeamFormProps) {
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
 
-    const [name, setName] = useState(player?.name ?? "");
-    const [nickname, setNickname] = useState(player?.nickname ?? "");
+    const [name, setName] = useState(team?.name ?? "");
     const [error, setError] = useState("");
-
-    const isEditing = Boolean(player);
 
     function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -32,15 +29,14 @@ export function PlayerForm({
 
         const formData = new FormData();
         formData.set("name", name);
-        formData.set("nickname", nickname);
 
         startTransition(async () => {
             let result;
 
-            if (player) {
-                result = await updatePlayerAction(player.id, formData);
+            if (team) {
+                result = await updateTeamAction(team.id, formData);
             } else {
-                result = await addPlayerAction(formData);
+                result = await addTeamAction(formData);
             }
 
             if (!result.success) {
@@ -48,13 +44,12 @@ export function PlayerForm({
                 return;
             }
 
-            if (player) {
-                router.push("/players");
+            if (team) {
+                router.push("/teams");
                 return;
             }
 
             setName("");
-            setNickname("");
             router.refresh();
             onSuccess?.();
         });
@@ -64,41 +59,18 @@ export function PlayerForm({
         <form onSubmit={handleSubmit} className="space-y-5">
             <div>
                 <label
-                    htmlFor="name"
+                    htmlFor="team-name"
                     className="mb-2 block text-sm font-semibold text-slate-700"
                 >
-                    Name
+                    Team name
                 </label>
 
                 <input
-                    id="name"
-                    name="name"
+                    id="team-name"
                     value={name}
                     onChange={(event) => setName(event.target.value)}
-                    placeholder="e.g. Joona"
+                    placeholder="e.g. Real Madrid"
                     required
-                    maxLength={100}
-                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10"
-                />
-            </div>
-
-            <div>
-                <label
-                    htmlFor="nickname"
-                    className="mb-2 block text-sm font-semibold text-slate-700"
-                >
-                    Nickname
-                    <span className="ml-2 font-normal text-slate-400">
-                        Optional
-                    </span>
-                </label>
-
-                <input
-                    id="nickname"
-                    name="nickname"
-                    value={nickname}
-                    onChange={(event) => setNickname(event.target.value)}
-                    placeholder="e.g. Jonde"
                     maxLength={100}
                     className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10"
                 />
@@ -117,9 +89,9 @@ export function PlayerForm({
             >
                 {isPending
                     ? "Saving..."
-                    : isEditing
+                    : team
                         ? "Save changes"
-                        : "Add player"}
+                        : "Add team"}
             </button>
         </form>
     );
