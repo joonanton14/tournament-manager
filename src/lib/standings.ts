@@ -1,7 +1,10 @@
 import { redis } from "@/lib/redis";
+import { requireAdmin } from "@/lib/auth";
 import type { TournamentStanding } from "@/types";
 
-function standingsKey(tournamentId: string) {
+function standingsKey(
+  tournamentId: string,
+) {
   return `tournamentStandings:${tournamentId}`;
 }
 
@@ -30,10 +33,15 @@ export async function getTournamentStandings(
 
   return standings
     .filter(
-      (standing): standing is TournamentStanding =>
+      (
+        standing,
+      ): standing is TournamentStanding =>
         standing !== null,
     )
-    .sort((a, b) => a.position - b.position);
+    .sort(
+      (a, b) =>
+        a.position - b.position,
+    );
 }
 
 export async function saveTournamentStandings(
@@ -50,9 +58,12 @@ export async function saveTournamentStandings(
     points: number;
   }>,
 ): Promise<void> {
-  const existing = await getTournamentStandings(
-    tournamentId,
-  );
+  await requireAdmin();
+
+  const existing =
+    await getTournamentStandings(
+      tournamentId,
+    );
 
   const existingByTeam = new Map(
     existing.map((standing) => [
@@ -62,13 +73,21 @@ export async function saveTournamentStandings(
   );
 
   const incomingTeamIds = new Set(
-    rows.map((row) => row.tournamentTeamId),
+    rows.map(
+      (row) =>
+        row.tournamentTeamId,
+    ),
   );
 
-  // Remove standing records for teams no longer submitted.
   for (const standing of existing) {
-    if (!incomingTeamIds.has(standing.tournamentTeamId)) {
-      await redis.del(standingKey(standing.id));
+    if (
+      !incomingTeamIds.has(
+        standing.tournamentTeamId,
+      )
+    ) {
+      await redis.del(
+        standingKey(standing.id),
+      );
 
       await redis.srem(
         standingsKey(tournamentId),
@@ -79,22 +98,30 @@ export async function saveTournamentStandings(
 
   for (const row of rows) {
     const existingStanding =
-      existingByTeam.get(row.tournamentTeamId);
+      existingByTeam.get(
+        row.tournamentTeamId,
+      );
 
     const standing: TournamentStanding = {
       id:
         existingStanding?.id ??
         crypto.randomUUID(),
+
       tournamentId,
-      tournamentTeamId: row.tournamentTeamId,
+
+      tournamentTeamId:
+        row.tournamentTeamId,
+
       position: row.position,
       played: row.played,
       wins: row.wins,
       draws: row.draws,
       losses: row.losses,
       goalsFor: row.goalsFor,
-      goalsAgainst: row.goalsAgainst,
+      goalsAgainst:
+        row.goalsAgainst,
       points: row.points,
+
       createdAt:
         existingStanding?.createdAt ??
         new Date().toISOString(),

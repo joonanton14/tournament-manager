@@ -3,19 +3,7 @@ import { Logo } from "@/components/Logo";
 
 const navigation = [
   {
-    label: "Tournaments",
-    href: "/tournaments",
-  },
-  {
-    label: "Teams",
-    href: "/teams",
-  },
-  {
-    label: "Players",
-    href: "/players",
-  },
-  {
-    label: "Statistics",
+    label: "Tournament history",
     href: "/statistics",
   },
 ];

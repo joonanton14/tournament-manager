@@ -1,4 +1,5 @@
 import { redis } from "@/lib/redis";
+import { requireAdmin } from "@/lib/auth";
 import type { Player } from "@/types";
 
 const PLAYERS_KEY = "players";
@@ -23,7 +24,9 @@ export async function getPlayers(): Promise<Player[]> {
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
-export async function getPlayerById(id: string): Promise<Player | null> {
+export async function getPlayerById(
+  id: string,
+): Promise<Player | null> {
   return redis.get<Player>(playerKey(id));
 }
 
@@ -31,6 +34,8 @@ export async function createPlayer(
   name: string,
   nickname?: string,
 ): Promise<Player> {
+  await requireAdmin();
+
   const trimmedName = name.trim();
   const trimmedNickname = nickname?.trim();
 
@@ -41,7 +46,9 @@ export async function createPlayer(
   const player: Player = {
     id: crypto.randomUUID(),
     name: trimmedName,
-    ...(trimmedNickname ? { nickname: trimmedNickname } : {}),
+    ...(trimmedNickname
+      ? { nickname: trimmedNickname }
+      : {}),
     createdAt: new Date().toISOString(),
   };
 
@@ -56,6 +63,8 @@ export async function updatePlayer(
   name: string,
   nickname?: string,
 ): Promise<Player> {
+  await requireAdmin();
+
   const existingPlayer = await getPlayerById(id);
 
   if (!existingPlayer) {
@@ -72,7 +81,9 @@ export async function updatePlayer(
   const player: Player = {
     ...existingPlayer,
     name: trimmedName,
-    ...(trimmedNickname ? { nickname: trimmedNickname } : {}),
+    ...(trimmedNickname
+      ? { nickname: trimmedNickname }
+      : {}),
   };
 
   await redis.set(playerKey(id), player);
@@ -80,7 +91,11 @@ export async function updatePlayer(
   return player;
 }
 
-export async function deletePlayer(id: string): Promise<void> {
+export async function deletePlayer(
+  id: string,
+): Promise<void> {
+  await requireAdmin();
+
   await redis.del(playerKey(id));
   await redis.srem(PLAYERS_KEY, id);
 }

@@ -52,12 +52,12 @@ export default function HomePage() {
             </p>
 
             <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
-              <Button href="/tournaments">
-                View tournaments
+              <Button href="/statistics">
+                View statistics
               </Button>
 
-              <Button href="/players" variant="secondary">
-                View players
+              <Button href="/statistics" variant="secondary">
+                Tournament history
               </Button>
             </div>
           </div>

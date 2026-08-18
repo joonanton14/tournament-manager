@@ -42,6 +42,10 @@ export type TournamentStanding = {
   createdAt: string;
 };
 
+export type PlayoffFormat =
+  | "four_team"
+  | "two_semifinals";
+
 export type PlayoffStage =
   | "semi_final"
   | "final";

@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import {
   saveSemiFinal,
+  saveFinal,
 } from "@/lib/playoffs";
 
 import {
@@ -580,6 +581,105 @@ export async function saveSemiFinalAction(
       success: false,
       error:
         "Failed to save semi-final.",
+    };
+  }
+}
+
+const finalSchema = z.object({
+  tournamentId: z.string().min(1),
+  teamAId: z.string().min(1),
+  teamBId: z.string().min(1),
+});
+
+function parseFinalScore(
+  value: FormDataEntryValue | null,
+): number | null {
+  if (
+    typeof value !== "string" ||
+    value.trim() === ""
+  ) {
+    return null;
+  }
+
+  const score = Number(value);
+
+  if (
+    !Number.isInteger(score) ||
+    score < 0
+  ) {
+    return null;
+  }
+
+  return score;
+}
+
+export async function saveFinalAction(
+  formData: FormData,
+) {
+  const result = finalSchema.safeParse({
+    tournamentId:
+      formData.get("tournamentId"),
+
+    teamAId:
+      formData.get("teamAId"),
+
+    teamBId:
+      formData.get("teamBId"),
+  });
+
+  if (!result.success) {
+    return {
+      success: false,
+      error:
+        result.error.issues[0]?.message ??
+        "Invalid final data.",
+    };
+  }
+
+  if (
+    result.data.teamAId ===
+    result.data.teamBId
+  ) {
+    return {
+      success: false,
+      error:
+        "Finalists must be different.",
+    };
+  }
+
+  const teamAScore = parseFinalScore(
+    formData.get("teamAScore"),
+  );
+
+  const teamBScore = parseFinalScore(
+    formData.get("teamBScore"),
+  );
+
+  try {
+    await saveFinal(
+      result.data.tournamentId,
+      result.data.teamAId,
+      result.data.teamBId,
+      teamAScore,
+      teamBScore,
+    );
+
+    revalidatePath(
+      `/tournaments/${result.data.tournamentId}/playoffs`,
+    );
+
+    return {
+      success: true,
+    };
+  } catch (error) {
+    console.error(
+      "Failed to save final:",
+      error,
+    );
+
+    return {
+      success: false,
+      error: "Failed to save final.",
     };
   }
 }

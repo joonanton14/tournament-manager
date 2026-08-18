@@ -1,6 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  useTransition,
+} from "react";
 import { useRouter } from "next/navigation";
 
 import { saveSemiFinalAction } from "@/app/tournaments/actions";
@@ -14,6 +19,11 @@ type SemiFinalFormProps = {
   number: number;
   teams: Team[];
   existing?: PlayoffTie;
+
+  initialTeamAId?: string;
+  initialTeamBId?: string;
+
+  lockedTeams?: boolean;
 };
 
 export function SemiFinalForm({
@@ -21,6 +31,9 @@ export function SemiFinalForm({
   number,
   teams,
   existing,
+  initialTeamAId = "",
+  initialTeamBId = "",
+  lockedTeams = false,
 }: SemiFinalFormProps) {
   const router = useRouter();
 
@@ -28,11 +41,13 @@ export function SemiFinalForm({
     useTransition();
 
   const [teamAId, setTeamAId] = useState(
-    existing?.teamAId ?? "",
+    existing?.teamAId ??
+      initialTeamAId,
   );
 
   const [teamBId, setTeamBId] = useState(
-    existing?.teamBId ?? "",
+    existing?.teamBId ??
+      initialTeamBId,
   );
 
   const [leg1A, setLeg1A] = useState(
@@ -66,37 +81,44 @@ export function SemiFinalForm({
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!existing) {
+    if (existing) {
+      setTeamAId(existing.teamAId);
+      setTeamBId(existing.teamBId);
+
+      setLeg1A(
+        existing.leg1TeamAScore !== null
+          ? String(existing.leg1TeamAScore)
+          : "",
+      );
+
+      setLeg1B(
+        existing.leg1TeamBScore !== null
+          ? String(existing.leg1TeamBScore)
+          : "",
+      );
+
+      setLeg2A(
+        existing.leg2TeamAScore !== null
+          ? String(existing.leg2TeamAScore)
+          : "",
+      );
+
+      setLeg2B(
+        existing.leg2TeamBScore !== null
+          ? String(existing.leg2TeamBScore)
+          : "",
+      );
+
       return;
     }
 
-    setTeamAId(existing.teamAId);
-    setTeamBId(existing.teamBId);
-
-    setLeg1A(
-      existing.leg1TeamAScore !== null
-        ? String(existing.leg1TeamAScore)
-        : "",
-    );
-
-    setLeg1B(
-      existing.leg1TeamBScore !== null
-        ? String(existing.leg1TeamBScore)
-        : "",
-    );
-
-    setLeg2A(
-      existing.leg2TeamAScore !== null
-        ? String(existing.leg2TeamAScore)
-        : "",
-    );
-
-    setLeg2B(
-      existing.leg2TeamBScore !== null
-        ? String(existing.leg2TeamBScore)
-        : "",
-    );
-  }, [existing]);
+    setTeamAId(initialTeamAId);
+    setTeamBId(initialTeamBId);
+  }, [
+    existing,
+    initialTeamAId,
+    initialTeamBId,
+  ]);
 
   const teamA = teams.find(
     (team) => team.id === teamAId,
@@ -117,10 +139,12 @@ export function SemiFinalForm({
     }
 
     const a =
-      Number(leg1A) + Number(leg2A);
+      Number(leg1A) +
+      Number(leg2A);
 
     const b =
-      Number(leg1B) + Number(leg2B);
+      Number(leg1B) +
+      Number(leg2B);
 
     return {
       teamA: a,
@@ -155,12 +179,14 @@ export function SemiFinalForm({
     event: React.FormEvent<HTMLFormElement>,
   ) {
     event.preventDefault();
+
     setError("");
 
     if (!teamAId || !teamBId) {
       setError(
-        "Select both semi-final teams.",
+        "Both semi-final teams are required.",
       );
+
       return;
     }
 
@@ -168,6 +194,7 @@ export function SemiFinalForm({
       setError(
         "Semi-final teams must be different.",
       );
+
       return;
     }
 
@@ -224,6 +251,7 @@ export function SemiFinalForm({
           result.error ??
             "Failed to save semi-final.",
         );
+
         return;
       }
 
@@ -245,27 +273,37 @@ export function SemiFinalForm({
             Team A
           </label>
 
-          <select
-            id={`team-a-${number}`}
-            value={teamAId}
-            onChange={(event) =>
-              setTeamAId(event.target.value)
-            }
-            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10"
-          >
-            <option value="">
-              Select team...
-            </option>
-
-            {teams.map((team) => (
-              <option
-                key={team.id}
-                value={team.id}
-              >
-                {team.name}
+          {lockedTeams ? (
+            <div className="rounded-xl border border-violet-200 bg-violet-50 px-4 py-3 text-sm font-semibold text-violet-900">
+              {teamA?.name ??
+                "Not available"}
+            </div>
+          ) : (
+            <select
+              id={`team-a-${number}`}
+              value={teamAId}
+              onChange={(event) =>
+                setTeamAId(
+                  event.target.value,
+                )
+              }
+              disabled={isPending}
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10"
+            >
+              <option value="">
+                Select team...
               </option>
-            ))}
-          </select>
+
+              {teams.map((team) => (
+                <option
+                  key={team.id}
+                  value={team.id}
+                >
+                  {team.name}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
 
         <div>
@@ -276,29 +314,46 @@ export function SemiFinalForm({
             Team B
           </label>
 
-          <select
-            id={`team-b-${number}`}
-            value={teamBId}
-            onChange={(event) =>
-              setTeamBId(event.target.value)
-            }
-            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10"
-          >
-            <option value="">
-              Select team...
-            </option>
-
-            {teams.map((team) => (
-              <option
-                key={team.id}
-                value={team.id}
-              >
-                {team.name}
+          {lockedTeams ? (
+            <div className="rounded-xl border border-violet-200 bg-violet-50 px-4 py-3 text-sm font-semibold text-violet-900">
+              {teamB?.name ??
+                "Not available"}
+            </div>
+          ) : (
+            <select
+              id={`team-b-${number}`}
+              value={teamBId}
+              onChange={(event) =>
+                setTeamBId(
+                  event.target.value,
+                )
+              }
+              disabled={isPending}
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10"
+            >
+              <option value="">
+                Select team...
               </option>
-            ))}
-          </select>
+
+              {teams.map((team) => (
+                <option
+                  key={team.id}
+                  value={team.id}
+                >
+                  {team.name}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
       </div>
+
+      {lockedTeams && (
+        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+          These teams are determined automatically from
+          the regular-season standings.
+        </div>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <ScoreBox
@@ -331,7 +386,8 @@ export function SemiFinalForm({
           <div className="mt-3 flex items-center justify-between gap-4">
             <div>
               <p className="font-bold">
-                {teamA?.name ?? "Team A"}
+                {teamA?.name ??
+                  "Team A"}
               </p>
 
               <p className="mt-1 text-3xl font-black">
@@ -345,7 +401,8 @@ export function SemiFinalForm({
 
             <div className="text-right">
               <p className="font-bold">
-                {teamB?.name ?? "Team B"}
+                {teamB?.name ??
+                  "Team B"}
               </p>
 
               <p className="mt-1 text-3xl font-black">
@@ -384,7 +441,11 @@ export function SemiFinalForm({
 
       <button
         type="submit"
-        disabled={isPending}
+        disabled={
+          isPending ||
+          !teamAId ||
+          !teamBId
+        }
         className="w-full rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-600/20 transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {isPending
@@ -432,7 +493,9 @@ function ScoreBox({
             placeholder="0"
             value={scoreA}
             onChange={(event) =>
-              onScoreA(event.target.value)
+              onScoreA(
+                event.target.value,
+              )
             }
             className="w-16 rounded-xl border border-slate-200 bg-white px-3 py-2 text-center font-bold outline-none focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10"
           />
@@ -449,7 +512,9 @@ function ScoreBox({
             placeholder="0"
             value={scoreB}
             onChange={(event) =>
-              onScoreB(event.target.value)
+              onScoreB(
+                event.target.value,
+              )
             }
             className="w-16 rounded-xl border border-slate-200 bg-white px-3 py-2 text-center font-bold outline-none focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10"
           />

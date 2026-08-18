@@ -1,4 +1,5 @@
 import { redis } from "@/lib/redis";
+import { requireAdmin } from "@/lib/auth";
 import type { Team } from "@/types";
 
 const TEAMS_KEY = "teams";
@@ -23,11 +24,17 @@ export async function getTeams(): Promise<Team[]> {
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
-export async function getTeamById(id: string): Promise<Team | null> {
+export async function getTeamById(
+  id: string,
+): Promise<Team | null> {
   return redis.get<Team>(teamKey(id));
 }
 
-export async function createTeam(name: string): Promise<Team> {
+export async function createTeam(
+  name: string,
+): Promise<Team> {
+  await requireAdmin();
+
   const trimmedName = name.trim();
 
   if (!trimmedName) {
@@ -50,6 +57,8 @@ export async function updateTeam(
   id: string,
   name: string,
 ): Promise<Team> {
+  await requireAdmin();
+
   const existingTeam = await getTeamById(id);
 
   if (!existingTeam) {
@@ -72,7 +81,11 @@ export async function updateTeam(
   return team;
 }
 
-export async function deleteTeam(id: string): Promise<void> {
+export async function deleteTeam(
+  id: string,
+): Promise<void> {
+  await requireAdmin();
+
   await redis.del(teamKey(id));
   await redis.srem(TEAMS_KEY, id);
 }

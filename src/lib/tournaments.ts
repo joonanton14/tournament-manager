@@ -1,4 +1,6 @@
 import { redis } from "@/lib/redis";
+import { requireAdmin } from "@/lib/auth";
+
 import type {
   Team,
   Tournament,
@@ -11,7 +13,9 @@ function tournamentKey(id: string) {
   return `tournament:${id}`;
 }
 
-function tournamentTeamsKey(tournamentId: string) {
+function tournamentTeamsKey(
+  tournamentId: string,
+) {
   return `tournamentTeams:${tournamentId}`;
 }
 
@@ -19,8 +23,12 @@ function tournamentTeamKey(id: string) {
   return `tournamentTeam:${id}`;
 }
 
-export async function getTournaments(): Promise<Tournament[]> {
-  const ids = await redis.smembers(TOURNAMENTS_KEY);
+export async function getTournaments(): Promise<
+  Tournament[]
+> {
+  const ids = await redis.smembers(
+    TOURNAMENTS_KEY,
+  );
 
   if (!ids.length) {
     return [];
@@ -28,7 +36,9 @@ export async function getTournaments(): Promise<Tournament[]> {
 
   const tournaments = await Promise.all(
     ids.map((id) =>
-      redis.get<Tournament>(tournamentKey(id)),
+      redis.get<Tournament>(
+        tournamentKey(id),
+      ),
     ),
   );
 
@@ -37,13 +47,17 @@ export async function getTournaments(): Promise<Tournament[]> {
       (tournament): tournament is Tournament =>
         tournament !== null,
     )
-    .sort((a, b) => a.number - b.number);
+    .sort(
+      (a, b) => a.number - b.number,
+    );
 }
 
 export async function getTournamentById(
   id: string,
 ): Promise<Tournament | null> {
-  return redis.get<Tournament>(tournamentKey(id));
+  return redis.get<Tournament>(
+    tournamentKey(id),
+  );
 }
 
 export async function createTournament(
@@ -52,18 +66,26 @@ export async function createTournament(
   startDate: string,
   endDate: string,
 ): Promise<Tournament> {
+  await requireAdmin();
+
   const trimmedName = name.trim();
 
   if (!trimmedName) {
-    throw new Error("Tournament name is required.");
+    throw new Error(
+      "Tournament name is required.",
+    );
   }
 
   if (!startDate) {
-    throw new Error("Tournament start date is required.");
+    throw new Error(
+      "Tournament start date is required.",
+    );
   }
 
   if (!endDate) {
-    throw new Error("Tournament end date is required.");
+    throw new Error(
+      "Tournament end date is required.",
+    );
   }
 
   if (endDate < startDate) {
@@ -105,16 +127,18 @@ export async function getTournamentTeams(
     return [];
   }
 
-  const tournamentTeams = await Promise.all(
-    ids.map((id) =>
-      redis.get<TournamentTeam>(
-        tournamentTeamKey(id),
+  const tournamentTeams =
+    await Promise.all(
+      ids.map((id) =>
+        redis.get<TournamentTeam>(
+          tournamentTeamKey(id),
+        ),
       ),
-    ),
-  );
+    );
 
   return tournamentTeams.filter(
-    (item): item is TournamentTeam => item !== null,
+    (item): item is TournamentTeam =>
+      item !== null,
   );
 }
 
@@ -122,8 +146,12 @@ export async function addTeamToTournament(
   tournamentId: string,
   teamId: string,
 ): Promise<TournamentTeam> {
+  await requireAdmin();
+
   const teamsInTournament =
-    await getTournamentTeams(tournamentId);
+    await getTournamentTeams(
+      tournamentId,
+    );
 
   const existing = teamsInTournament.find(
     (item) => item.teamId === teamId,
@@ -141,7 +169,9 @@ export async function addTeamToTournament(
   };
 
   await redis.set(
-    tournamentTeamKey(tournamentTeam.id),
+    tournamentTeamKey(
+      tournamentTeam.id,
+    ),
     tournamentTeam,
   );
 
@@ -157,12 +187,19 @@ export async function assignPlayersToTournamentTeam(
   tournamentTeamId: string,
   playerIds: string[],
 ): Promise<TournamentTeam> {
-  const existing = await redis.get<TournamentTeam>(
-    tournamentTeamKey(tournamentTeamId),
-  );
+  await requireAdmin();
+
+  const existing =
+    await redis.get<TournamentTeam>(
+      tournamentTeamKey(
+        tournamentTeamId,
+      ),
+    );
 
   if (!existing) {
-    throw new Error("Tournament team not found.");
+    throw new Error(
+      "Tournament team not found.",
+    );
   }
 
   const updated: TournamentTeam = {
@@ -171,7 +208,9 @@ export async function assignPlayersToTournamentTeam(
   };
 
   await redis.set(
-    tournamentTeamKey(tournamentTeamId),
+    tournamentTeamKey(
+      tournamentTeamId,
+    ),
     updated,
   );
 
@@ -188,12 +227,16 @@ export async function getTournamentTeamDetails(
   }>
 > {
   const tournamentTeams =
-    await getTournamentTeams(tournamentId);
+    await getTournamentTeams(
+      tournamentId,
+    );
 
   return tournamentTeams
     .map((tournamentTeam) => {
       const team = teams.find(
-        (item) => item.id === tournamentTeam.teamId,
+        (item) =>
+          item.id ===
+          tournamentTeam.teamId,
       );
 
       if (!team) {
@@ -219,12 +262,19 @@ export async function updateTournamentTeam(
   tournamentTeamId: string,
   teamId: string,
 ): Promise<TournamentTeam> {
-  const existing = await redis.get<TournamentTeam>(
-    tournamentTeamKey(tournamentTeamId),
-  );
+  await requireAdmin();
+
+  const existing =
+    await redis.get<TournamentTeam>(
+      tournamentTeamKey(
+        tournamentTeamId,
+      ),
+    );
 
   if (!existing) {
-    throw new Error("Tournament team not found.");
+    throw new Error(
+      "Tournament team not found.",
+    );
   }
 
   const updated: TournamentTeam = {
@@ -234,7 +284,9 @@ export async function updateTournamentTeam(
   };
 
   await redis.set(
-    tournamentTeamKey(tournamentTeamId),
+    tournamentTeamKey(
+      tournamentTeamId,
+    ),
     updated,
   );
 
@@ -244,18 +296,31 @@ export async function updateTournamentTeam(
 export async function removeTeamFromTournament(
   tournamentTeamId: string,
 ): Promise<void> {
-  const existing = await redis.get<TournamentTeam>(
-    tournamentTeamKey(tournamentTeamId),
-  );
+  await requireAdmin();
+
+  const existing =
+    await redis.get<TournamentTeam>(
+      tournamentTeamKey(
+        tournamentTeamId,
+      ),
+    );
 
   if (!existing) {
-    throw new Error("Tournament team not found.");
+    throw new Error(
+      "Tournament team not found.",
+    );
   }
 
-  await redis.del(tournamentTeamKey(tournamentTeamId));
+  await redis.del(
+    tournamentTeamKey(
+      tournamentTeamId,
+    ),
+  );
 
   await redis.srem(
-    tournamentTeamsKey(existing.tournamentId),
+    tournamentTeamsKey(
+      existing.tournamentId,
+    ),
     tournamentTeamId,
   );
 }
