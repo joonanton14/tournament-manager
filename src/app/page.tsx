@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { StatCard } from "@/components/StatCard";
+import { redirect } from "next/navigation";
 
 const stats = [
   {
@@ -27,6 +28,7 @@ const stats = [
 ];
 
 export default function HomePage() {
+  redirect("/statistics");
   return (
     <div className="overflow-hidden">
       <section className="relative">
