@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+
 import { saveTournamentStandingsAction } from "@/app/tournaments/actions";
+
 import type {
   Team,
   TournamentStanding,
@@ -12,7 +14,6 @@ import type {
 type Row = {
   tournamentTeamId: string;
   teamName: string;
-  position: string;
   played: string;
   wins: string;
   draws: string;
@@ -20,6 +21,7 @@ type Row = {
   goalsFor: string;
   goalsAgainst: string;
   points: string;
+  previousPosition: number;
 };
 
 type RegularSeasonTableProps = {
@@ -37,7 +39,9 @@ export function RegularSeasonTable({
   standings,
 }: RegularSeasonTableProps) {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+
+  const [isPending, startTransition] =
+    useTransition();
 
   const [rows, setRows] = useState<Row[]>(() =>
     tournamentTeams.map(
@@ -49,12 +53,10 @@ export function RegularSeasonTable({
         );
 
         return {
-          tournamentTeamId: tournamentTeam.id,
-          teamName: team.name,
+          tournamentTeamId:
+            tournamentTeam.id,
 
-          position: existing
-            ? String(existing.position)
-            : String(index + 1),
+          teamName: team.name,
 
           played: existing
             ? String(existing.played)
@@ -83,22 +85,56 @@ export function RegularSeasonTable({
           points: existing
             ? String(existing.points)
             : "",
+
+          previousPosition:
+            existing?.position ??
+            index + 1,
         };
       },
     ),
   );
 
+  /*
+   * Display order is calculated from points.
+   *
+   * Higher points = higher position.
+   *
+   * If two teams have the same points, we keep
+   * their previously saved position for now.
+   */
+  const sortedRows = useMemo(() => {
+    return [...rows].sort((a, b) => {
+      const pointsA =
+        Number(a.points) || 0;
+
+      const pointsB =
+        Number(b.points) || 0;
+
+      if (pointsA !== pointsB) {
+        return pointsB - pointsA;
+      }
+
+      return (
+        a.previousPosition -
+        b.previousPosition
+      );
+    });
+  }, [rows]);
+
   function updateRow(
-    index: number,
+    tournamentTeamId: string,
     field: keyof Omit<
       Row,
-      "tournamentTeamId" | "teamName"
+      "tournamentTeamId" |
+        "teamName" |
+        "previousPosition"
     >,
     value: string,
   ) {
     setRows((current) =>
-      current.map((row, rowIndex) =>
-        rowIndex === index
+      current.map((row) =>
+        row.tournamentTeamId ===
+        tournamentTeamId
           ? {
               ...row,
               [field]: value,
@@ -109,22 +145,16 @@ export function RegularSeasonTable({
   }
 
   function handleSave() {
-    const formData = new FormData();
-
-    formData.set(
-      "tournamentId",
-      tournamentId,
-    );
-
-    formData.set(
-      "rows",
-      JSON.stringify(
-        rows.map((row) => ({
+    /*
+     * The sorted order determines the final position.
+     */
+    const rowsToSave =
+      sortedRows.map(
+        (row, index) => ({
           tournamentTeamId:
             row.tournamentTeamId,
 
-          position:
-            Number(row.position) || 0,
+          position: index + 1,
 
           played:
             Number(row.played) || 0,
@@ -146,8 +176,19 @@ export function RegularSeasonTable({
 
           points:
             Number(row.points) || 0,
-        })),
-      ),
+        }),
+      );
+
+    const formData = new FormData();
+
+    formData.set(
+      "tournamentId",
+      tournamentId,
+    );
+
+    formData.set(
+      "rows",
+      JSON.stringify(rowsToSave),
     );
 
     startTransition(async () => {
@@ -161,6 +202,7 @@ export function RegularSeasonTable({
           result.error ??
             "Failed to save standings.",
         );
+
         return;
       }
 
@@ -186,10 +228,10 @@ export function RegularSeasonTable({
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[900px] border-collapse">
+        <table className="w-full min-w-[950px] border-collapse">
           <thead>
             <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs font-bold uppercase tracking-wide text-slate-500">
-              <th className="px-4 py-4">
+              <th className="w-20 px-4 py-4">
                 Pos
               </th>
 
@@ -228,77 +270,149 @@ export function RegularSeasonTable({
           </thead>
 
           <tbody>
-            {rows.map((row, index) => (
-              <tr
-                key={row.tournamentTeamId}
-                className="border-b border-slate-100 last:border-0"
-              >
-                {/* Position */}
-                <td className="px-4 py-4">
-                  <input
-                    type="number"
-                    min="1"
-                    value={row.position}
-                    onChange={(event) =>
+            {sortedRows.map(
+              (row, index) => (
+                <tr
+                  key={row.tournamentTeamId}
+                  className="border-b border-slate-100 last:border-0"
+                >
+                  {/* Position */}
+                  <td className="px-4 py-4">
+                    <div
+                      className={[
+                        "flex h-9 w-9 items-center justify-center rounded-lg text-sm font-black",
+                        index === 0
+                          ? "bg-violet-600 text-white"
+                          : "bg-slate-100 text-slate-700",
+                      ].join(" ")}
+                    >
+                      {index + 1}
+                    </div>
+                  </td>
+
+                  {/* Team */}
+                  <td className="px-4 py-4">
+                    <div className="font-semibold text-slate-950">
+                      {row.teamName}
+                    </div>
+                  </td>
+
+                  {/* Played */}
+                  <NumberInput
+                    value={row.played}
+                    onChange={(value) =>
                       updateRow(
-                        index,
-                        "position",
-                        event.target.value,
+                        row.tournamentTeamId,
+                        "played",
+                        value,
                       )
                     }
-                    className="w-16 rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold outline-none focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10"
                   />
-                </td>
 
-                {/* Team */}
-                <td className="px-4 py-4">
-                  <div className="font-semibold text-slate-950">
-                    {row.teamName}
-                  </div>
-                </td>
+                  {/* Wins */}
+                  <NumberInput
+                    value={row.wins}
+                    onChange={(value) =>
+                      updateRow(
+                        row.tournamentTeamId,
+                        "wins",
+                        value,
+                      )
+                    }
+                  />
 
-                {/* Other statistics */}
-                {(
-                  [
-                    "played",
-                    "wins",
-                    "draws",
-                    "losses",
-                    "goalsFor",
-                    "goalsAgainst",
-                    "points",
-                  ] as const
-                ).map((field) => (
-                  <td
-                    key={field}
-                    className="px-3 py-4"
-                  >
+                  {/* Draws */}
+                  <NumberInput
+                    value={row.draws}
+                    onChange={(value) =>
+                      updateRow(
+                        row.tournamentTeamId,
+                        "draws",
+                        value,
+                      )
+                    }
+                  />
+
+                  {/* Losses */}
+                  <NumberInput
+                    value={row.losses}
+                    onChange={(value) =>
+                      updateRow(
+                        row.tournamentTeamId,
+                        "losses",
+                        value,
+                      )
+                    }
+                  />
+
+                  {/* Goals For */}
+                  <NumberInput
+                    value={row.goalsFor}
+                    onChange={(value) =>
+                      updateRow(
+                        row.tournamentTeamId,
+                        "goalsFor",
+                        value,
+                      )
+                    }
+                  />
+
+                  {/* Goals Against */}
+                  <NumberInput
+                    value={
+                      row.goalsAgainst
+                    }
+                    onChange={(value) =>
+                      updateRow(
+                        row.tournamentTeamId,
+                        "goalsAgainst",
+                        value,
+                      )
+                    }
+                  />
+
+                  {/* Points */}
+                  <td className="px-3 py-4">
                     <input
                       type="number"
                       min="0"
                       placeholder="0"
-                      value={row[field]}
+                      value={row.points}
                       onChange={(event) =>
                         updateRow(
-                          index,
-                          field,
+                          row.tournamentTeamId,
+                          "points",
                           event.target.value,
                         )
                       }
-                      className="mx-auto w-16 rounded-lg border border-slate-200 px-2 py-2 text-center text-sm outline-none placeholder:text-slate-300 focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10"
+                      className={[
+                        "mx-auto block w-20 rounded-lg border px-2 py-2 text-center text-sm font-bold outline-none",
+                        "border-violet-200 bg-violet-50",
+                        "placeholder:text-violet-300",
+                        "focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10",
+                      ].join(" ")}
                     />
                   </td>
-                ))}
-              </tr>
-            ))}
+                </tr>
+              ),
+            )}
           </tbody>
         </table>
       </div>
 
-      <div className="flex flex-col gap-3 border-t border-slate-200 bg-slate-50 p-5 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-slate-500">
-          Enter the final regular-season table manually.
-        </p>
+      <div className="flex flex-col gap-4 border-t border-slate-200 bg-slate-50 p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-sm font-semibold text-slate-700">
+            Final regular-season table
+          </p>
+
+          <p className="mt-1 max-w-xl text-xs leading-5 text-slate-500">
+            Teams are automatically ranked by points.
+            Higher points place the team higher in the
+            table. Equal points currently preserve the
+            previous position.
+          </p>
+        </div>
 
         <button
           type="button"
@@ -312,5 +426,30 @@ export function RegularSeasonTable({
         </button>
       </div>
     </div>
+  );
+}
+
+type NumberInputProps = {
+  value: string;
+  onChange: (value: string) => void;
+};
+
+function NumberInput({
+  value,
+  onChange,
+}: NumberInputProps) {
+  return (
+    <td className="px-3 py-4">
+      <input
+        type="number"
+        min="0"
+        placeholder="0"
+        value={value}
+        onChange={(event) =>
+          onChange(event.target.value)
+        }
+        className="mx-auto block w-16 rounded-lg border border-slate-200 px-2 py-2 text-center text-sm outline-none placeholder:text-slate-300 focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10"
+      />
+    </td>
   );
 }

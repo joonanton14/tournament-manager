@@ -4,11 +4,6 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import {
-  saveSemiFinal,
-  saveFinal,
-} from "@/lib/playoffs";
-
-import {
   addTeamToTournament,
   assignPlayersToTournamentTeam,
   createTournament,
@@ -17,6 +12,11 @@ import {
 } from "@/lib/tournaments";
 
 import { saveTournamentStandings } from "@/lib/standings";
+
+import {
+  saveSemiFinal,
+  saveFinal,
+} from "@/lib/playoffs";
 
 /* -------------------------------------------------------
    Tournament
@@ -93,7 +93,10 @@ export async function addTournamentAction(
 
     return {
       success: false,
-      error: "Failed to create tournament.",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to create tournament.",
     };
   }
 }
@@ -136,6 +139,10 @@ export async function addTeamToTournamentAction(
       `/tournaments/${result.data.tournamentId}/regular-season`,
     );
 
+    revalidatePath(
+      `/tournaments/${result.data.tournamentId}/playoffs`,
+    );
+
     return {
       success: true,
     };
@@ -147,7 +154,10 @@ export async function addTeamToTournamentAction(
 
     return {
       success: false,
-      error: "Failed to add team to tournament.",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to add team to tournament.",
     };
   }
 }
@@ -202,7 +212,10 @@ export async function assignPlayersAction(
 
     return {
       success: false,
-      error: "Failed to assign players.",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to assign players.",
     };
   }
 }
@@ -249,6 +262,10 @@ export async function updateTournamentTeamAction(
       `/tournaments/${updated.tournamentId}/regular-season`,
     );
 
+    revalidatePath(
+      `/tournaments/${updated.tournamentId}/playoffs`,
+    );
+
     return {
       success: true,
     };
@@ -260,7 +277,10 @@ export async function updateTournamentTeamAction(
 
     return {
       success: false,
-      error: "Failed to change team.",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to change team.",
     };
   }
 }
@@ -305,6 +325,10 @@ export async function removeTeamFromTournamentAction(
       `/tournaments/${result.data.tournamentId}/regular-season`,
     );
 
+    revalidatePath(
+      `/tournaments/${result.data.tournamentId}/playoffs`,
+    );
+
     return {
       success: true,
     };
@@ -317,7 +341,9 @@ export async function removeTeamFromTournamentAction(
     return {
       success: false,
       error:
-        "Failed to remove team from tournament.",
+        error instanceof Error
+          ? error.message
+          : "Failed to remove team from tournament.",
     };
   }
 }
@@ -425,6 +451,12 @@ export async function saveTournamentStandingsAction(
       `/tournaments/${result.data.tournamentId}/regular-season`,
     );
 
+    revalidatePath(
+      `/tournaments/${result.data.tournamentId}/playoffs`,
+    );
+
+    revalidatePath("/statistics");
+
     return {
       success: true,
     };
@@ -436,9 +468,38 @@ export async function saveTournamentStandingsAction(
 
     return {
       success: false,
-      error: "Failed to save standings.",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to save standings.",
     };
   }
+}
+
+/* -------------------------------------------------------
+   Semi-final
+------------------------------------------------------- */
+
+function parseOptionalScore(
+  value: FormDataEntryValue | null,
+): number | null {
+  if (
+    typeof value !== "string" ||
+    value.trim() === ""
+  ) {
+    return null;
+  }
+
+  const score = Number(value);
+
+  if (
+    !Number.isInteger(score) ||
+    score < 0
+  ) {
+    return null;
+  }
+
+  return score;
 }
 
 const semiFinalSchema = z.object({
@@ -451,88 +512,70 @@ const semiFinalSchema = z.object({
     .max(2),
 
   teamAId: z.string().min(1),
+
   teamBId: z.string().min(1),
 
-  leg1TeamAScore: z.coerce
-    .number()
-    .int()
-    .min(0)
-    .nullable(),
+  leg1TeamAScore: z.number().int().min(0).nullable(),
 
-  leg1TeamBScore: z.coerce
-    .number()
-    .int()
-    .min(0)
-    .nullable(),
+  leg1TeamBScore: z.number().int().min(0).nullable(),
 
-  leg2TeamAScore: z.coerce
-    .number()
-    .int()
-    .min(0)
-    .nullable(),
+  leg2TeamAScore: z.number().int().min(0).nullable(),
 
-  leg2TeamBScore: z.coerce
-    .number()
-    .int()
-    .min(0)
-    .nullable(),
+  leg2TeamBScore: z.number().int().min(0).nullable(),
 });
-
-function parseOptionalScore(
-  value: FormDataEntryValue | null,
-): number | null {
-  if (
-    typeof value !== "string" ||
-    value.trim() === ""
-  ) {
-    return null;
-  }
-
-  const number = Number(value);
-
-  return Number.isInteger(number) && number >= 0
-    ? number
-    : null;
-}
 
 export async function saveSemiFinalAction(
   formData: FormData,
 ) {
-  const result = semiFinalSchema.safeParse({
-    tournamentId:
-      formData.get("tournamentId"),
+  const result =
+    semiFinalSchema.safeParse({
+      tournamentId:
+        formData.get("tournamentId"),
 
-    number:
-      formData.get("number"),
+      number:
+        formData.get("number"),
 
-    teamAId:
-      formData.get("teamAId"),
+      teamAId:
+        formData.get("teamAId"),
 
-    teamBId:
-      formData.get("teamBId"),
+      teamBId:
+        formData.get("teamBId"),
 
-    leg1TeamAScore:
-      parseOptionalScore(
-        formData.get("leg1TeamAScore"),
-      ),
+      leg1TeamAScore:
+        parseOptionalScore(
+          formData.get(
+            "leg1TeamAScore",
+          ),
+        ),
 
-    leg1TeamBScore:
-      parseOptionalScore(
-        formData.get("leg1TeamBScore"),
-      ),
+      leg1TeamBScore:
+        parseOptionalScore(
+          formData.get(
+            "leg1TeamBScore",
+          ),
+        ),
 
-    leg2TeamAScore:
-      parseOptionalScore(
-        formData.get("leg2TeamAScore"),
-      ),
+      leg2TeamAScore:
+        parseOptionalScore(
+          formData.get(
+            "leg2TeamAScore",
+          ),
+        ),
 
-    leg2TeamBScore:
-      parseOptionalScore(
-        formData.get("leg2TeamBScore"),
-      ),
-  });
+      leg2TeamBScore:
+        parseOptionalScore(
+          formData.get(
+            "leg2TeamBScore",
+          ),
+        ),
+    });
 
   if (!result.success) {
+    console.error(
+      "Invalid semi-final:",
+      result.error,
+    );
+
     return {
       success: false,
       error:
@@ -568,6 +611,10 @@ export async function saveSemiFinalAction(
       `/tournaments/${result.data.tournamentId}/playoffs`,
     );
 
+    revalidatePath(
+      `/statistics`,
+    );
+
     return {
       success: true,
     };
@@ -580,38 +627,24 @@ export async function saveSemiFinalAction(
     return {
       success: false,
       error:
-        "Failed to save semi-final.",
+        error instanceof Error
+          ? error.message
+          : "Failed to save semi-final.",
     };
   }
 }
 
+/* -------------------------------------------------------
+   Final
+------------------------------------------------------- */
+
 const finalSchema = z.object({
   tournamentId: z.string().min(1),
+
   teamAId: z.string().min(1),
+
   teamBId: z.string().min(1),
 });
-
-function parseFinalScore(
-  value: FormDataEntryValue | null,
-): number | null {
-  if (
-    typeof value !== "string" ||
-    value.trim() === ""
-  ) {
-    return null;
-  }
-
-  const score = Number(value);
-
-  if (
-    !Number.isInteger(score) ||
-    score < 0
-  ) {
-    return null;
-  }
-
-  return score;
-}
 
 export async function saveFinalAction(
   formData: FormData,
@@ -647,13 +680,25 @@ export async function saveFinalAction(
     };
   }
 
-  const teamAScore = parseFinalScore(
-    formData.get("teamAScore"),
-  );
+  const teamAScore =
+    parseOptionalScore(
+      formData.get("teamAScore"),
+    );
 
-  const teamBScore = parseFinalScore(
-    formData.get("teamBScore"),
-  );
+  const teamBScore =
+    parseOptionalScore(
+      formData.get("teamBScore"),
+    );
+
+  if (
+    teamAScore === null ||
+    teamBScore === null
+  ) {
+    return {
+      success: false,
+      error: "Both final scores are required.",
+    };
+  }
 
   try {
     await saveFinal(
@@ -668,6 +713,8 @@ export async function saveFinalAction(
       `/tournaments/${result.data.tournamentId}/playoffs`,
     );
 
+    revalidatePath("/statistics");
+
     return {
       success: true,
     };
@@ -679,7 +726,10 @@ export async function saveFinalAction(
 
     return {
       success: false,
-      error: "Failed to save final.",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to save final.",
     };
   }
 }

@@ -2,9 +2,7 @@ import { redis } from "@/lib/redis";
 import { requireAdmin } from "@/lib/auth";
 import type { PlayoffTie } from "@/types";
 
-const PLAYOFFS_KEY = (
-  tournamentId: string,
-) =>
+const PLAYOFFS_KEY = (tournamentId: string) =>
   `playoffs:${tournamentId}`;
 
 const playoffKey = (id: string) =>
@@ -23,9 +21,7 @@ export async function getTournamentPlayoffs(
 
   const playoffs = await Promise.all(
     ids.map((id) =>
-      redis.get<PlayoffTie>(
-        playoffKey(id),
-      ),
+      redis.get<PlayoffTie>(playoffKey(id)),
     ),
   );
 
@@ -35,14 +31,11 @@ export async function getTournamentPlayoffs(
         playoff !== null,
     )
     .sort((a, b) => {
-      if (a.stage === b.stage) {
-        return a.number - b.number;
+      if (a.stage !== b.stage) {
+        return a.stage === "semi_final" ? -1 : 1;
       }
 
-      return a.stage ===
-        "semi_final"
-        ? -1
-        : 1;
+      return a.number - b.number;
     });
 }
 
@@ -58,6 +51,10 @@ export async function saveSemiFinal(
 ): Promise<PlayoffTie> {
   await requireAdmin();
 
+  if (number !== 1 && number !== 2) {
+    throw new Error("Invalid semi-final number.");
+  }
+
   if (!teamAId || !teamBId) {
     throw new Error(
       "Both semi-final teams are required.",
@@ -71,36 +68,25 @@ export async function saveSemiFinal(
   }
 
   const existingPlayoffs =
-    await getTournamentPlayoffs(
-      tournamentId,
-    );
+    await getTournamentPlayoffs(tournamentId);
 
-  const existing =
-    existingPlayoffs.find(
-      (playoff) =>
-        playoff.stage ===
-          "semi_final" &&
-        playoff.number === number,
-    );
+  const existing = existingPlayoffs.find(
+    (playoff) =>
+      playoff.stage === "semi_final" &&
+      playoff.number === number,
+  );
 
   const playoff: PlayoffTie = {
-    id:
-      existing?.id ??
-      crypto.randomUUID(),
-
+    id: existing?.id ?? crypto.randomUUID(),
     tournamentId,
     stage: "semi_final",
     number,
-
     teamAId,
     teamBId,
-
     leg1TeamAScore,
     leg1TeamBScore,
-
     leg2TeamAScore,
     leg2TeamBScore,
-
     createdAt:
       existing?.createdAt ??
       new Date().toISOString(),
@@ -140,53 +126,24 @@ export async function saveFinal(
     );
   }
 
-  if (
-    teamAScore !== null &&
-    teamAScore < 0
-  ) {
-    throw new Error(
-      "Invalid home score.",
-    );
-  }
-
-  if (
-    teamBScore !== null &&
-    teamBScore < 0
-  ) {
-    throw new Error(
-      "Invalid away score.",
-    );
-  }
-
   const existingPlayoffs =
-    await getTournamentPlayoffs(
-      tournamentId,
-    );
+    await getTournamentPlayoffs(tournamentId);
 
-  const existing =
-    existingPlayoffs.find(
-      (playoff) =>
-        playoff.stage === "final",
-    );
+  const existing = existingPlayoffs.find(
+    (playoff) => playoff.stage === "final",
+  );
 
   const playoff: PlayoffTie = {
-    id:
-      existing?.id ??
-      crypto.randomUUID(),
-
+    id: existing?.id ?? crypto.randomUUID(),
     tournamentId,
     stage: "final",
     number: 1,
-
     teamAId,
     teamBId,
-
     leg1TeamAScore: teamAScore,
     leg1TeamBScore: teamBScore,
-
     leg2TeamAScore: null,
     leg2TeamBScore: null,
-
     createdAt:
       existing?.createdAt ??
       new Date().toISOString(),
