@@ -13,10 +13,10 @@ export function Logo() {
 
       <div className="hidden sm:block">
         <div className="text-sm font-bold tracking-tight text-slate-950">
-          FIFA Tournament
+          FIFA Manualturnaus
         </div>
         <div className="text-xs font-medium text-slate-500">
-          Manager
+          Turnausten hallinta
         </div>
       </div>
     </Link>

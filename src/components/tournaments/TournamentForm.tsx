@@ -56,7 +56,7 @@ export function TournamentForm() {
           htmlFor="number"
           className="mb-2 block text-sm font-semibold text-slate-700"
         >
-          Tournament number
+          Turnauksen numero
         </label>
 
         <input
@@ -78,7 +78,7 @@ export function TournamentForm() {
           htmlFor="name"
           className="mb-2 block text-sm font-semibold text-slate-700"
         >
-          Name
+          Nimi
         </label>
 
         <input
@@ -98,7 +98,7 @@ export function TournamentForm() {
           htmlFor="startDate"
           className="mb-2 block text-sm font-semibold text-slate-700"
         >
-          Start date & time
+          Aloitus päivämäärä ja aika
         </label>
 
         <input
@@ -118,7 +118,7 @@ export function TournamentForm() {
           htmlFor="endDate"
           className="mb-2 block text-sm font-semibold text-slate-700"
         >
-          End date & time
+          Lopetus päivämäärä ja kello
         </label>
 
         <input

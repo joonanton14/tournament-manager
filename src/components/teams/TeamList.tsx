@@ -61,11 +61,11 @@ export function TeamList({ teams }: TeamListProps) {
                 </div>
 
                 <h2 className="mt-5 text-lg font-bold text-slate-950">
-                    No teams yet
+                    Ei lisättyjä joukkeita
                 </h2>
 
                 <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
-                    Add the teams you use in your FIFA tournaments.
+                    Lisää joukkueet joita käytät turnauksessa
                 </p>
             </div>
         );
@@ -115,7 +115,7 @@ export function TeamList({ teams }: TeamListProps) {
                                         href={`/teams/${team.id}?edit=true`}
                                         className="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
                                     >
-                                        Edit
+                                        Muokkaa
                                     </Link>
 
                                     <button
@@ -136,7 +136,7 @@ export function TeamList({ teams }: TeamListProps) {
                     </div>
                 ) : (
                     <div className="p-10 text-center text-sm text-slate-500">
-                        No teams match your search.
+                        Ei joukkeita, jotka vastaavat hakuasi
                     </div>
                 )}
             </div>

@@ -42,7 +42,7 @@ export function TournamentSelector({
       className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-900 outline-none transition focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10"
     >
       <option value="">
-        Select tournament
+        Valitse turnaus
       </option>
 
       {tournaments.map((tournament) => (

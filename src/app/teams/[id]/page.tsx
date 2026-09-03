@@ -28,7 +28,7 @@ export default async function TeamPage({
           href="/teams"
           className="text-sm font-semibold text-violet-600 hover:text-violet-700"
         >
-          ← Back to teams
+          ← Takaisin joukkeisiin
         </Link>
 
         <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_320px]">
@@ -41,7 +41,7 @@ export default async function TeamPage({
 
                 <div>
                   <p className="text-sm text-slate-400">
-                    Team
+                    Joukkue
                   </p>
 
                   <h1 className="mt-1 text-3xl font-black">
@@ -53,19 +53,19 @@ export default async function TeamPage({
 
             <div className="p-6">
               <p className="text-sm text-slate-500">
-                Tournament usage and player assignments will appear here
-                once tournaments are connected.
+                Turnauksen käyttö ja pelaajien määritykset näkyvät tässä
+                kun turnaukset on yhdistetty.
               </p>
             </div>
           </Card>
 
           <Card className="h-fit p-6">
             <h2 className="text-lg font-bold text-slate-950">
-              Edit team
+              Muokkaa joukkuetta
             </h2>
 
             <p className="mt-1 mb-6 text-sm leading-6 text-slate-500">
-              Update the team name.
+              Päivitä joukkueen nimi.
             </p>
 
             <TeamForm team={team} />

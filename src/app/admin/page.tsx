@@ -21,15 +21,15 @@ export default async function AdminPage() {
         <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-sm font-bold uppercase tracking-widest text-violet-600">
-              Administration
+              Admin
             </p>
 
             <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
-              Tournament Manager
+              Turnausten hallinta
             </h1>
 
             <p className="mt-3 max-w-2xl text-slate-600">
-              Manage players, teams and tournament data.
+              Hallitse pelaajia, joukkueita ja turnausdataa.
             </p>
           </div>
 
@@ -38,50 +38,50 @@ export default async function AdminPage() {
               type="submit"
               className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
             >
-              Sign out
+              Kirjaudu ulos
             </button>
           </form>
         </div>
 
         <div className="mt-10 grid gap-5 md:grid-cols-3">
           <AdminCard
-            title="Players"
-            description="Add, edit and manage tournament players."
+            title="Pelaajat"
+            description="Lisää, muokkaa tai poista pelaajia."
             href="/players"
           />
 
           <AdminCard
-            title="Teams"
-            description="Manage football teams and tournament assignments."
+            title="Joukkueet"
+            description="Hallinnoi joukkueita, pelaajia ja turnauksia."
             href="/teams"
           />
 
           <AdminCard
-            title="Tournaments"
-            description="Manage tournaments, standings and playoffs."
+            title="Turnaukset"
+            description="Hallinnoi turnauksia ja pudotuspelejä"
             href="/tournaments"
           />
         </div>
 
         <div className="mt-8 rounded-2xl border border-violet-200 bg-violet-50 p-6">
           <p className="text-sm font-bold uppercase tracking-wide text-violet-600">
-            Public site
+            Etusivu
           </p>
 
           <h2 className="mt-2 text-xl font-bold text-slate-950">
-            See what visitors see
+            Katso mille sivu näyttää julkiselle yleisölle
           </h2>
 
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            The statistics page is public and does not
-            require an admin login.
+            Etusivun katsominen ei vaadi sisäänkirjautumista, joten voit tarkistaa miltä sivu näyttää
+            julkiselle yleisölle.
           </p>
 
           <Link
             href="/statistics"
             className="mt-4 inline-flex rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-violet-700"
           >
-            Open public statistics
+            Vapaasti katsottavat tilastot
           </Link>
         </div>
       </div>
@@ -114,7 +114,7 @@ function AdminCard({
         </p>
 
         <p className="mt-5 text-sm font-semibold text-violet-600">
-          Manage →
+          Hallinnoi →
         </p>
       </Card>
     </Link>

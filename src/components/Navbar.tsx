@@ -3,7 +3,7 @@ import { Logo } from "@/components/Logo";
 
 const navigation = [
   {
-    label: "Tournament history",
+    label: "Turnaus historia",
     href: "/statistics",
   },
 ];

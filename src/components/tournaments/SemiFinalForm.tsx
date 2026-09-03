@@ -270,7 +270,7 @@ export function SemiFinalForm({
             htmlFor={`team-a-${number}`}
             className="mb-2 block text-sm font-semibold text-slate-700"
           >
-            Team A
+            Joukkue A
           </label>
 
           {lockedTeams ? (
@@ -291,7 +291,7 @@ export function SemiFinalForm({
               className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10"
             >
               <option value="">
-                Select team...
+                Valitse joukkue
               </option>
 
               {teams.map((team) => (
@@ -311,7 +311,7 @@ export function SemiFinalForm({
             htmlFor={`team-b-${number}`}
             className="mb-2 block text-sm font-semibold text-slate-700"
           >
-            Team B
+            Joukkue B
           </label>
 
           {lockedTeams ? (
@@ -332,7 +332,7 @@ export function SemiFinalForm({
               className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10"
             >
               <option value="">
-                Select team...
+                Valitse joukkue
               </option>
 
               {teams.map((team) => (
@@ -350,8 +350,8 @@ export function SemiFinalForm({
 
       {lockedTeams && (
         <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-          These teams are determined automatically from
-          the regular-season standings.
+          Nämä joukkueet on määrätty automaattisesti
+          sääntöjen mukaan.
         </div>
       )}
 
@@ -396,7 +396,7 @@ export function SemiFinalForm({
             </div>
 
             <div className="text-slate-500">
-              –
+              -
             </div>
 
             <div className="text-right">
@@ -414,19 +414,19 @@ export function SemiFinalForm({
           <div className="mt-4 border-t border-slate-800 pt-4">
             {winner === "teamA" && (
               <p className="font-semibold text-violet-400">
-                {teamA?.name} advances to the final
+                {teamA?.name} etenee finaaliin
               </p>
             )}
 
             {winner === "teamB" && (
               <p className="font-semibold text-violet-400">
-                {teamB?.name} advances to the final
+                {teamB?.name} etenee finaaliin
               </p>
             )}
 
             {winner === "draw" && (
               <p className="font-semibold text-amber-400">
-                Aggregate is tied. We need a tie-break rule.
+                Yhteismaalit on tasan, lisää jatkoajan tai rangaistuspotkukilpailun tulos
               </p>
             )}
           </div>

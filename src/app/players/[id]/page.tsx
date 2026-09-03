@@ -28,7 +28,7 @@ export default async function PlayerPage({
           href="/players"
           className="text-sm font-semibold text-violet-600 hover:text-violet-700"
         >
-          ← Back to players
+          ← Takaisin pelaajiin
         </Link>
 
         <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_320px]">
@@ -41,7 +41,7 @@ export default async function PlayerPage({
 
                 <div>
                   <p className="text-sm text-slate-400">
-                    Player
+                    Pelaaja
                   </p>
 
                   <h1 className="mt-1 text-3xl font-black">
@@ -60,14 +60,14 @@ export default async function PlayerPage({
             <div className="grid grid-cols-2 divide-x divide-slate-200">
               <div className="p-6">
                 <p className="text-sm text-slate-500">
-                  Tournaments
+                  Turnaukset
                 </p>
                 <p className="mt-2 text-3xl font-bold">0</p>
               </div>
 
               <div className="p-6">
                 <p className="text-sm text-slate-500">
-                  Goals
+                  Maalit
                 </p>
                 <p className="mt-2 text-3xl font-bold">0</p>
               </div>
@@ -76,11 +76,11 @@ export default async function PlayerPage({
 
           <Card className="h-fit p-6">
             <h2 className="text-lg font-bold text-slate-950">
-              Edit player
+              Muokkaa pelaajaa
             </h2>
 
             <p className="mt-1 mb-6 text-sm leading-6 text-slate-500">
-              Update the player's name or nickname.
+              Päivitä pelaajan nimi tai lempinimi.
             </p>
 
             <PlayerForm player={player} />

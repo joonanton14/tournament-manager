@@ -49,16 +49,16 @@ export default function AdminLoginPage() {
           </div>
 
           <p className="mt-6 text-sm font-bold uppercase tracking-widest text-violet-600">
-            Administration
+            Admin
           </p>
 
           <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950">
-            Admin login
+            Admin kirjautuminen
           </h1>
 
           <p className="mt-3 text-sm leading-6 text-slate-500">
-            Sign in to manage tournaments, teams,
-            players and results.
+            Kirjaudu sisään hallitaksesi turnauksia, joukkueita,
+            pelaajia ja tuloksia.
           </p>
         </div>
 
@@ -72,7 +72,7 @@ export default function AdminLoginPage() {
                 htmlFor="password"
                 className="mb-2 block text-sm font-semibold text-slate-700"
               >
-                Password
+                Salasana
               </label>
 
               <input
@@ -103,8 +103,8 @@ export default function AdminLoginPage() {
               className="w-full rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-600/20 transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isPending
-                ? "Signing in..."
-                : "Sign in"}
+                ? "Kirjaudutaan sisään..."
+                : "Kirjaudu sisään"}
             </button>
           </form>
         </div>

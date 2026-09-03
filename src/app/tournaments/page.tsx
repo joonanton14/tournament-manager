@@ -24,15 +24,15 @@ export default async function TournamentsPage() {
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
         <div className="mb-10">
           <p className="text-sm font-bold uppercase tracking-widest text-violet-600">
-            Competition
+            Kilpailu
           </p>
 
           <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
-            Tournaments
+            Turnaukset
           </h1>
 
           <p className="mt-3 max-w-2xl text-slate-600">
-            Create and manage your FIFA tournaments.
+            Luo ja hallitse FIFA-turnauksiasi.
           </p>
         </div>
 
@@ -40,12 +40,12 @@ export default async function TournamentsPage() {
           <Card className="h-fit p-6">
             <div className="mb-6">
               <h2 className="text-lg font-bold text-slate-950">
-                Create tournament
+                Luo turnaus
               </h2>
 
               <p className="mt-1 text-sm leading-6 text-slate-500">
-                Set the tournament number, name and
-                schedule.
+                Aseta turnauksen numero, nimi ja
+                aikataulu.
               </p>
             </div>
 
@@ -55,7 +55,7 @@ export default async function TournamentsPage() {
           <div>
             <div className="mb-4">
               <h2 className="text-lg font-bold text-slate-950">
-                Tournament history
+                Turnauksen historia
               </h2>
 
               <p className="mt-1 text-sm text-slate-500">
@@ -114,11 +114,11 @@ export default async function TournamentsPage() {
             ) : (
               <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center">
                 <p className="font-semibold text-slate-950">
-                  No tournaments yet
+                  Ei vielä turnauksia
                 </p>
 
                 <p className="mt-2 text-sm text-slate-500">
-                  Create Tournament 10 to start.
+                  Luo turnaus aloittaaksesi.
                 </p>
               </div>
             )}

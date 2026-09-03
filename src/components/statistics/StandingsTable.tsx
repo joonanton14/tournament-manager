@@ -19,12 +19,11 @@ export function StandingsTable({
     return (
       <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center">
         <p className="font-semibold text-slate-950">
-          No standings available
+          Sarjataulukko ei ole vielä julkaistu
         </p>
 
         <p className="mt-2 text-sm text-slate-500">
-          This tournament does not have a published
-          regular-season table yet.
+          Tämän turnauksen sarjataulukko ei ole vielä julkaistu. Kun turnaus on käynnissä, sarjataulukko päivittyy automaattisesti.
         </p>
       </div>
     );
@@ -37,11 +36,11 @@ export function StandingsTable({
           <thead>
             <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs font-bold uppercase tracking-wide text-slate-500">
               <th className="px-5 py-4">
-                Pos
+                PL
               </th>
 
               <th className="px-5 py-4">
-                Team
+                Joukkue
               </th>
 
               <th className="px-4 py-4 text-center">
@@ -49,27 +48,27 @@ export function StandingsTable({
               </th>
 
               <th className="px-4 py-4 text-center">
-                W
+                V
               </th>
 
               <th className="px-4 py-4 text-center">
-                D
+                TP
               </th>
 
               <th className="px-4 py-4 text-center">
-                L
+                H
               </th>
 
               <th className="px-4 py-4 text-center">
-                GF
+                TM
               </th>
 
               <th className="px-4 py-4 text-center">
-                GA
+                PM
               </th>
 
               <th className="px-5 py-4 text-center">
-                Pts
+                Ps
               </th>
             </tr>
           </thead>

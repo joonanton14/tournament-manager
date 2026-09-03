@@ -177,7 +177,7 @@ export function FinalForm({
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
           <p className="text-xs font-bold uppercase tracking-wide text-violet-600">
-            Finalist 1
+            Finalisti 1
           </p>
 
           <h3 className="mt-2 text-lg font-bold text-slate-950">
@@ -200,7 +200,7 @@ export function FinalForm({
 
         <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
           <p className="text-xs font-bold uppercase tracking-wide text-violet-600">
-            Finalist 2
+            Finalisti 2
           </p>
 
           <h3 className="mt-2 text-lg font-bold text-slate-950">
@@ -225,7 +225,7 @@ export function FinalForm({
       {winnerTeam && (
         <div className="rounded-2xl bg-slate-950 p-6 text-center text-white">
           <p className="text-sm font-bold uppercase tracking-widest text-violet-400">
-            Champion
+            Voittaja
           </p>
 
           <p className="mt-3 text-3xl font-black">
@@ -233,16 +233,14 @@ export function FinalForm({
           </p>
 
           <p className="mt-2 text-sm text-slate-400">
-            {scoreA} – {scoreB}
+            {scoreA} - {scoreB}
           </p>
         </div>
       )}
 
       {winner === "draw" && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
-          The final is tied. We need to add the
-          tie-break method before a champion can be
-          determined.
+         Finaali päättyi tasan. Lisää jatkoaika ja mahdollinen rangaistuspotkukilpailu manuaalisesti.
         </div>
       )}
 

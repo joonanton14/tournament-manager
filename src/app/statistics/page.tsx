@@ -158,16 +158,16 @@ export default async function StatisticsPage({
 
         <div className="relative p-8 sm:p-10">
           <p className="text-sm font-bold uppercase tracking-widest text-violet-400">
-            Public statistics
+            Statistiikka
           </p>
 
           <h1 className="mt-3 text-4xl font-black tracking-tight sm:text-5xl">
-            Tournament history
+            Turnauksen historia
           </h1>
 
           <p className="mt-4 max-w-2xl leading-7 text-slate-400">
-            Explore the results and regular-season
-            standings from the FIFA tournaments.
+            Tarkastele tuloksia ja sääntökauden
+            sijoituksia FIFA-turnauksista.
           </p>
         </div>
       </section>
@@ -177,7 +177,7 @@ export default async function StatisticsPage({
           <div className="grid gap-6 lg:grid-cols-[1fr_300px] lg:items-end">
             <div>
               <p className="text-sm font-bold uppercase tracking-wide text-violet-600">
-                Selected tournament
+                Valittu turnaus
               </p>
 
               <h2 className="mt-2 text-2xl font-bold text-slate-950">
@@ -215,7 +215,7 @@ export default async function StatisticsPage({
         <section className="mt-8">
           <div className="rounded-2xl border border-violet-200 bg-violet-50 p-6 sm:p-8">
             <p className="text-sm font-bold uppercase tracking-widest text-violet-600">
-              Tournament champion
+              Turnauksen mestari
             </p>
 
             <div className="mt-3 flex items-center gap-4">
@@ -229,7 +229,7 @@ export default async function StatisticsPage({
                 </h2>
 
                 <p className="mt-1 text-sm text-slate-500">
-                  Tournament #
+                  Turnaus #
                   {selectedTournament.number}
                 </p>
               </div>
@@ -241,16 +241,15 @@ export default async function StatisticsPage({
       <section className="mt-8">
         <div className="mb-5">
           <p className="text-sm font-bold uppercase tracking-wide text-violet-600">
-            Regular season
+            Runkosarja
           </p>
 
           <h2 className="mt-2 text-2xl font-bold text-slate-950">
-            Final standings
+            Lopulliset sijoitukset
           </h2>
 
           <p className="mt-1 text-sm text-slate-500">
-            The final regular-season table for this
-            tournament.
+           Lopullinen sarjataulukko
           </p>
         </div>
 
@@ -262,24 +261,24 @@ export default async function StatisticsPage({
       <section className="mt-8 pb-16">
         <Card className="p-6">
           <h2 className="text-lg font-bold text-slate-950">
-            Tournament information
+            Turnaus info
           </h2>
 
           <div className="mt-4 grid gap-4 sm:grid-cols-3">
             <InfoItem
-              label="Tournament"
+              label="Turnaus"
               value={`#${selectedTournament.number}`}
             />
 
             <InfoItem
-              label="Teams"
+              label="Joukkeet"
               value={String(
                 tournamentTeamDetails.length,
               )}
             />
 
             <InfoItem
-              label="Standings"
+              label="Sijoitukset"
               value={
                 standings.length
                   ? "Available"
@@ -315,19 +314,18 @@ function EmptyStatisticsState() {
       </div>
 
       <h1 className="mt-5 text-2xl font-bold text-slate-950">
-        No statistics available yet
+        Ei tilastoja vielä.
       </h1>
 
       <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
-        Tournament statistics will appear here when
-        tournaments and standings have been entered.
+        Turnauksen tilastot löytyvät täältä kun ne on syötetty.
       </p>
 
       <Link
         href="/"
         className="mt-6 inline-flex rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white hover:bg-violet-700"
       >
-        Back home
+        Takaisin
       </Link>
     </Card>
   );

@@ -67,7 +67,7 @@ export function PlayerForm({
                     htmlFor="name"
                     className="mb-2 block text-sm font-semibold text-slate-700"
                 >
-                    Name
+                    Nimi
                 </label>
 
                 <input
@@ -87,7 +87,7 @@ export function PlayerForm({
                     htmlFor="nickname"
                     className="mb-2 block text-sm font-semibold text-slate-700"
                 >
-                    Nickname
+                    Lempinimi
                     <span className="ml-2 font-normal text-slate-400">
                         Optional
                     </span>

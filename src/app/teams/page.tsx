@@ -23,13 +23,12 @@ export default async function TeamsPage() {
             </h1>
 
             <p className="mt-3 max-w-2xl text-slate-600">
-              Manage the football teams that can be used across your
-              tournaments.
+              Hallitse jalkapallojoukkueita, joita voidaan käyttää eri turnauksissa.
             </p>
           </div>
 
           <Button href="#add-team">
-            + Add team
+            + lisää joukkue
           </Button>
         </div>
 
@@ -38,11 +37,11 @@ export default async function TeamsPage() {
             <Card className="h-fit p-6">
               <div className="mb-6">
                 <h2 className="text-lg font-bold text-slate-950">
-                  Add team
+                  Lisää joukkue
                 </h2>
 
                 <p className="mt-1 text-sm leading-6 text-slate-500">
-                  Create a team once and reuse it in different tournaments.
+                  Luo joukkue ja käytä sitä eri turnauksissa.
                 </p>
               </div>
 
@@ -54,12 +53,12 @@ export default async function TeamsPage() {
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-bold text-slate-950">
-                  All teams
+                  Kaikki joukkueet
                 </h2>
 
                 <p className="mt-1 text-sm text-slate-500">
                   {teams.length}{" "}
-                  {teams.length === 1 ? "team" : "teams"}
+                  {teams.length === 1 ? "joukkue" : "joukkuetta"}
                 </p>
               </div>
             </div>

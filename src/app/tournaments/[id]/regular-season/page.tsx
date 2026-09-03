@@ -46,12 +46,12 @@ export default async function RegularSeasonPage({
           href="/tournaments"
           className="text-sm font-semibold text-violet-600 hover:text-violet-700"
         >
-          ← Back to tournaments
+          ← Takaisin turnauksiin
         </Link>
 
         <div className="mt-8">
           <p className="text-sm font-bold uppercase tracking-widest text-violet-600">
-            Tournament #{tournament.number}
+            Turnaus #{tournament.number}
           </p>
 
           <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
@@ -59,7 +59,7 @@ export default async function RegularSeasonPage({
           </h1>
 
           <p className="mt-3 text-slate-600">
-            Enter the final regular-season table.
+            Syötä lopullinen sarjataulukko
           </p>
         </div>
 
@@ -72,13 +72,13 @@ export default async function RegularSeasonPage({
           <Card className="p-6">
             <div className="mb-6">
               <h2 className="text-xl font-bold text-slate-950">
-                Regular-season final table
+                Lopullinen sarjataulukko
               </h2>
 
               <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">
-                The historical tournaments can be entered
-                manually. We don't need the individual regular-season
-                matches if you only have the final table.
+                Historialliset turnaukset voidaan syöttää
+                manuaalisesti. Ei tarvitse tietää yksittäisiä sarjajoukkueita
+                jos sinulla on vain lopullinen taulukko.
               </p>
             </div>
 

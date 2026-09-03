@@ -38,28 +38,27 @@ export default function HomePage() {
           <div className="mx-auto max-w-4xl text-center">
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-semibold text-violet-700">
               <span className="h-2 w-2 rounded-full bg-violet-600" />
-              FIFA Tournament Manager
+              Full manual FIFA turnaus historia.
             </div>
 
             <h1 className="text-4xl font-black tracking-tight text-slate-950 sm:text-6xl lg:text-7xl">
               Every tournament.
               <span className="block text-violet-600">
-                Every match. Every goal.
+                Kaikki turnaukset.
               </span>
             </h1>
 
             <p className="mx-auto mt-6 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
-              Keep your FIFA tournament history in one place. Track teams,
-              players, match results and scorers across every tournament.
+              Kaikkien turunausten tiedot yhdessä paikassa.
             </p>
 
             <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
               <Button href="/statistics">
-                View statistics
+                Katso tilastoja
               </Button>
 
               <Button href="/statistics" variant="secondary">
-                Tournament history
+                Turnaushistoria
               </Button>
             </div>
           </div>
@@ -82,22 +81,21 @@ export default function HomePage() {
           <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
             <div>
               <p className="text-sm font-bold uppercase tracking-widest text-violet-600">
-                Tournament 10
+                Turnaus ?
               </p>
 
               <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
-                The next chapter starts here.
+                Seuraava kappale alkaa tästä.
               </h2>
 
               <p className="mt-4 max-w-2xl text-slate-600">
-                Add the teams, assign the players and record every match as
-                the tournament progresses. Previous tournaments can be added
-                later using the same data structure.
+                  Lisää joukkeet, määritä pelaajat ja kirjaa jokainen 
+                  ottelu turnauksen edetessä.  
               </p>
 
               <div className="mt-7">
                 <Button href="/tournaments/10">
-                  Open tournament 10
+                  Turnaus ?
                 </Button>
               </div>
             </div>
@@ -106,9 +104,9 @@ export default function HomePage() {
               <div className="bg-slate-950 p-6 text-white">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-slate-400">Current tournament</p>
+                    <p className="text-sm text-slate-400">Meneillään oleva turnaus</p>
                     <h3 className="mt-1 text-2xl font-bold">
-                      FIFA Tournament 10
+                      FIFA Turnaus ?
                     </h3>
                   </div>
 
@@ -121,21 +119,21 @@ export default function HomePage() {
               <div className="grid grid-cols-3 divide-x divide-slate-200">
                 <div className="p-5">
                   <p className="text-xs font-medium text-slate-500">
-                    Teams
+                    Joukkeet
                   </p>
                   <p className="mt-2 text-2xl font-bold">—</p>
                 </div>
 
                 <div className="p-5">
                   <p className="text-xs font-medium text-slate-500">
-                    Matches
+                    Ottelut
                   </p>
                   <p className="mt-2 text-2xl font-bold">—</p>
                 </div>
 
                 <div className="p-5">
                   <p className="text-xs font-medium text-slate-500">
-                    Goals
+                    Maalit
                   </p>
                   <p className="mt-2 text-2xl font-bold">—</p>
                 </div>
@@ -148,30 +146,30 @@ export default function HomePage() {
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="mb-8">
           <p className="text-sm font-bold uppercase tracking-widest text-violet-600">
-            Explore
+            Tutki
           </p>
 
           <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-950">
-            Everything in one place
+            Kaikki yhdessä paikassa
           </h2>
         </div>
 
         <div className="grid gap-5 md:grid-cols-3">
           <FeatureCard
-            title="Tournaments"
-            description="Browse every tournament and see teams, matches, results and standings."
+            title="Turnaukset"
+            description="Selaa kaikkia turnauksia ja katso joukkeita, otteluita, tuloksia ja sijoituksia."
             href="/tournaments"
           />
 
           <FeatureCard
-            title="Players"
-            description="Keep a permanent player database and track their tournament history."
+            title="Pelaajat"
+            description="Pidä pysyvä pelaajatietokanta ja seuraa heidän turnaushistoriaansa."
             href="/players"
           />
 
           <FeatureCard
-            title="Statistics"
-            description="Compare players, teams and tournaments using the results we collect."
+            title="Tilastot"
+            description="Vertaa pelaajia, joukkeita ja turnauksia syötettyjen tulosten avulla."
             href="/statistics"
           />
         </div>
@@ -207,7 +205,7 @@ function FeatureCard({
         </p>
 
         <div className="mt-6 text-sm font-semibold text-violet-600 transition group-hover:text-violet-700">
-          Explore →
+          Tutki →
         </div>
       </Card>
     </Link>

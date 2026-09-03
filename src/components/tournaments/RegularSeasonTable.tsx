@@ -214,12 +214,12 @@ export function RegularSeasonTable({
     return (
       <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center">
         <p className="font-semibold text-slate-950">
-          Add teams first
+          Lisää joukkueet ensin
         </p>
 
         <p className="mt-2 text-sm text-slate-500">
-          Add the tournament teams before entering
-          the regular-season table.
+          Lisää turnausjoukkueet ennen kuin voit lisätä sääntöjen mukaan
+          sijoituksia.
         </p>
       </div>
     );
@@ -232,11 +232,11 @@ export function RegularSeasonTable({
           <thead>
             <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs font-bold uppercase tracking-wide text-slate-500">
               <th className="w-20 px-4 py-4">
-                Pos
+                Pelipaikka
               </th>
 
               <th className="px-4 py-4">
-                Team
+                Joukkue
               </th>
 
               <th className="px-3 py-4 text-center">
@@ -244,27 +244,27 @@ export function RegularSeasonTable({
               </th>
 
               <th className="px-3 py-4 text-center">
-                W
+                V
               </th>
 
               <th className="px-3 py-4 text-center">
-                D
+                TP
               </th>
 
               <th className="px-3 py-4 text-center">
-                L
+                T
               </th>
 
               <th className="px-3 py-4 text-center">
-                GF
+                TM
               </th>
 
               <th className="px-3 py-4 text-center">
-                GA
+                PM
               </th>
 
               <th className="px-3 py-4 text-center">
-                Pts
+                Pis
               </th>
             </tr>
           </thead>
@@ -403,14 +403,11 @@ export function RegularSeasonTable({
       <div className="flex flex-col gap-4 border-t border-slate-200 bg-slate-50 p-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-semibold text-slate-700">
-            Final regular-season table
+            Lopullinen sarjataulukko
           </p>
 
           <p className="mt-1 max-w-xl text-xs leading-5 text-slate-500">
-            Teams are automatically ranked by points.
-            Higher points place the team higher in the
-            table. Equal points currently preserve the
-            previous position.
+            Joukkueet on automaattisesti järjestetty pisteiden mukaan. Jos kaksi joukkuetta on tasapisteissä, niiden aiempi sijoitus säilyy.
           </p>
         </div>
 

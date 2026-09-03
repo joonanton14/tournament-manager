@@ -115,7 +115,7 @@ export function TournamentTeamActions({
           htmlFor={`change-team-${tournamentTeamId}`}
           className="mb-2 block text-sm font-semibold text-slate-700"
         >
-          Change team
+          Vaihda joukkue
         </label>
 
         <select
@@ -153,7 +153,7 @@ export function TournamentTeamActions({
             disabled={isPending}
             className="rounded-lg px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100"
           >
-            Cancel
+            Peruuta
           </button>
         </div>
       </div>
@@ -168,7 +168,7 @@ export function TournamentTeamActions({
         disabled={isPending}
         className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700"
       >
-        Change team
+        Vaihda joukkue
       </button>
 
       <button
@@ -177,7 +177,7 @@ export function TournamentTeamActions({
         disabled={isPending}
         className="rounded-lg px-3 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-50"
       >
-        Remove
+        Poista
       </button>
     </div>
   );

@@ -15,22 +15,20 @@ export default async function PlayersPage() {
                 <div className="mb-10 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
                     <div>
                         <p className="text-sm font-bold uppercase tracking-widest text-violet-600">
-                            Database
+                            Data
                         </p>
 
                         <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
-                            Players
+                            Pelaajat
                         </h1>
 
                         <p className="mt-3 max-w-2xl text-slate-600">
-                            Manage the players who participate in your FIFA tournaments.
-                            Each player is stored once and can be reused across all
-                            tournaments.
+                            Hallitse kuka osallistuu turnaukseen ja millä joukkueella ja tallenne ne pysyvästi
                         </p>
                     </div>
 
                     <Button href="#add-player">
-                        + Add player
+                        + lisää pelaaja
                     </Button>
                 </div>
 
@@ -39,12 +37,11 @@ export default async function PlayersPage() {
                         <Card className="h-fit p-6">
                             <div className="mb-6">
                                 <h2 className="text-lg font-bold text-slate-950">
-                                    Add player
+                                    Lisää pelaaja
                                 </h2>
 
                                 <p className="mt-1 text-sm leading-6 text-slate-500">
-                                    Create a player once and reuse them across every
-                                    tournament.
+                                    Luo pelaaaja ja käytä sitä eri turnauksissa.
                                 </p>
                             </div>
 
@@ -56,7 +53,7 @@ export default async function PlayersPage() {
                         <div className="mb-4 flex items-center justify-between">
                             <div>
                                 <h2 className="text-lg font-bold text-slate-950">
-                                    All players
+                                    Kaikki pelaajat
                                 </h2>
 
                                 <p className="mt-1 text-sm text-slate-500">
