@@ -8,728 +8,246 @@ import {
   assignPlayersToTournamentTeam,
   createTournament,
   removeTeamFromTournament,
+  updateTournament,
   updateTournamentTeam,
 } from "@/lib/tournaments";
-
 import { saveTournamentStandings } from "@/lib/standings";
+import { saveFinal, saveSemiFinal } from "@/lib/playoffs";
 
-import {
-  saveSemiFinal,
-  saveFinal,
-} from "@/lib/playoffs";
+const tournamentSchema = z.object({
+  number: z.coerce.number().int().min(1),
+  name: z.string().trim().min(1).max(100),
+  startDate: z.string().min(1),
+  endDate: z.string().min(1),
+}).refine((data) => data.endDate >= data.startDate, {
+  message: "End date cannot be before the start date.",
+  path: ["endDate"],
+});
 
-/* -------------------------------------------------------
-   Tournament
-------------------------------------------------------- */
+type ActionResult =
+  | {
+      success: true;
+      error?: never;
+      tournamentId?: string;
+    }
+  | {
+      success: false;
+      error: string;
+      tournamentId?: never;
+    };
 
-const tournamentSchema = z
-  .object({
-    number: z.coerce
-      .number()
-      .int()
-      .min(1, "Tournament number must be at least 1."),
-
-    name: z
-      .string()
-      .trim()
-      .min(1, "Tournament name is required.")
-      .max(100, "Tournament name is too long."),
-
-    startDate: z
-      .string()
-      .min(1, "Start date is required."),
-
-    endDate: z
-      .string()
-      .min(1, "End date is required."),
-  })
-  .refine(
-    (data) => data.endDate >= data.startDate,
-    {
-      message:
-        "End date cannot be before the start date.",
-      path: ["endDate"],
-    },
-  );
+function failure(
+  error: unknown,
+  fallback: string,
+): ActionResult {
+  return {
+    success: false,
+    error: error instanceof Error ? error.message : fallback,
+  };
+}
 
 export async function addTournamentAction(
   formData: FormData,
-) {
+): Promise<ActionResult> {
   const result = tournamentSchema.safeParse({
     number: formData.get("number"),
     name: formData.get("name"),
     startDate: formData.get("startDate"),
     endDate: formData.get("endDate"),
   });
-
-  if (!result.success) {
-    return {
-      success: false,
-      error:
-        result.error.issues[0]?.message ??
-        "Invalid tournament data.",
-    };
-  }
+  if (!result.success) return failure(result.error.issues[0]?.message, "Invalid tournament data.");
 
   try {
-    const tournament = await createTournament(
-      result.data.number,
-      result.data.name,
-      result.data.startDate,
-      result.data.endDate,
-    );
-
+    const tournament = await createTournament(result.data.number, result.data.name, result.data.startDate, result.data.endDate);
     revalidatePath("/tournaments");
-
-    return {
-      success: true,
-      tournamentId: tournament.id,
-    };
+    return { success: true, tournamentId: tournament.id };
   } catch (error) {
-    console.error(
-      "Failed to create tournament:",
-      error,
-    );
-
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to create tournament.",
-    };
+    return failure(error, "Failed to create tournament.");
   }
 }
 
-/* -------------------------------------------------------
-   Add team to tournament
-------------------------------------------------------- */
+const updateTournamentSchema = z.object({
+  tournamentId: z.string().min(1),
+  name: z.string().trim().min(1).max(100),
+  startDate: z.string().min(1),
+  endDate: z.string().min(1),
+}).refine((data) => data.endDate >= data.startDate, {
+  message: "End date cannot be before the start date.",
+  path: ["endDate"],
+});
 
-const addTeamSchema = z.object({
+export async function updateTournamentAction(
+  formData: FormData,
+): Promise<void> {
+  const result = updateTournamentSchema.safeParse({
+    tournamentId: formData.get("tournamentId"),
+    name: formData.get("name"),
+    startDate: formData.get("startDate"),
+    endDate: formData.get("endDate"),
+  });
+  if (!result.success) {
+    throw new Error(result.error.issues[0]?.message ?? "Invalid tournament data.");
+  }
+
+  await updateTournament(result.data.tournamentId, result.data.name, result.data.startDate, result.data.endDate);
+  revalidateTournament(result.data.tournamentId);
+}
+
+const tournamentTeamSchema = z.object({
   tournamentId: z.string().min(1),
   teamId: z.string().min(1),
 });
 
 export async function addTeamToTournamentAction(
   formData: FormData,
-) {
-  const result = addTeamSchema.safeParse({
+): Promise<ActionResult> {
+  const result = tournamentTeamSchema.safeParse({
     tournamentId: formData.get("tournamentId"),
     teamId: formData.get("teamId"),
   });
-
-  if (!result.success) {
-    return {
-      success: false,
-      error: "Tournament and team are required.",
-    };
-  }
+  if (!result.success) return failure("Tournament and team are required.", "Invalid tournament team.");
 
   try {
-    await addTeamToTournament(
-      result.data.tournamentId,
-      result.data.teamId,
-    );
-
-    revalidatePath(
-      `/tournaments/${result.data.tournamentId}`,
-    );
-
-    revalidatePath(
-      `/tournaments/${result.data.tournamentId}/regular-season`,
-    );
-
-    revalidatePath(
-      `/tournaments/${result.data.tournamentId}/playoffs`,
-    );
-
-    return {
-      success: true,
-    };
+    await addTeamToTournament(result.data.tournamentId, result.data.teamId);
+    revalidateTournament(result.data.tournamentId);
+    return { success: true };
   } catch (error) {
-    console.error(
-      "Failed to add team to tournament:",
-      error,
-    );
-
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to add team to tournament.",
-    };
+    return failure(error, "Failed to add team to tournament.");
   }
 }
-
-/* -------------------------------------------------------
-   Assign players to tournament team
-------------------------------------------------------- */
-
-const assignmentSchema = z.object({
-  tournamentTeamId: z.string().min(1),
-  playerIds: z.array(z.string()),
-});
 
 export async function assignPlayersAction(
   formData: FormData,
-) {
-  const playerIds = formData
-    .getAll("playerIds")
-    .filter(
-      (value): value is string =>
-        typeof value === "string",
-    );
-
-  const result = assignmentSchema.safeParse({
-    tournamentTeamId: formData.get(
-      "tournamentTeamId",
-    ),
-    playerIds,
-  });
-
-  if (!result.success) {
-    return {
-      success: false,
-      error: "Invalid player assignment.",
-    };
-  }
+): Promise<ActionResult> {
+  const tournamentTeamId = formData.get("tournamentTeamId");
+  const playerIds = formData.getAll("playerIds").filter((value): value is string => typeof value === "string");
+  if (typeof tournamentTeamId !== "string" || !tournamentTeamId) return failure("Invalid player assignment.", "Invalid player assignment.");
 
   try {
-    await assignPlayersToTournamentTeam(
-      result.data.tournamentTeamId,
-      result.data.playerIds,
-    );
-
-    return {
-      success: true,
-    };
+    await assignPlayersToTournamentTeam(tournamentTeamId, playerIds);
+    return { success: true };
   } catch (error) {
-    console.error(
-      "Failed to assign players:",
-      error,
-    );
-
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to assign players.",
-    };
+    return failure(error, "Failed to assign players.");
   }
 }
-
-/* -------------------------------------------------------
-   Change team inside tournament
-------------------------------------------------------- */
-
-const updateTournamentTeamSchema = z.object({
-  tournamentTeamId: z.string().min(1),
-  teamId: z.string().min(1),
-});
 
 export async function updateTournamentTeamAction(
   formData: FormData,
-) {
-  const result =
-    updateTournamentTeamSchema.safeParse({
-      tournamentTeamId: formData.get(
-        "tournamentTeamId",
-      ),
-      teamId: formData.get("teamId"),
-    });
-
-  if (!result.success) {
-    return {
-      success: false,
-      error:
-        "Tournament team and new team are required.",
-    };
-  }
+): Promise<ActionResult> {
+  const teamId = formData.get("teamId");
+  const tournamentTeamId = formData.get("tournamentTeamId");
+  if (typeof tournamentTeamId !== "string" || typeof teamId !== "string" || !tournamentTeamId || !teamId) return failure("Tournament team and new team are required.", "Invalid tournament team.");
 
   try {
-    const updated = await updateTournamentTeam(
-      result.data.tournamentTeamId,
-      result.data.teamId,
-    );
-
-    revalidatePath(
-      `/tournaments/${updated.tournamentId}`,
-    );
-
-    revalidatePath(
-      `/tournaments/${updated.tournamentId}/regular-season`,
-    );
-
-    revalidatePath(
-      `/tournaments/${updated.tournamentId}/playoffs`,
-    );
-
-    return {
-      success: true,
-    };
+    const updated = await updateTournamentTeam(tournamentTeamId, teamId);
+    revalidateTournament(updated.tournamentId);
+    return { success: true };
   } catch (error) {
-    console.error(
-      "Failed to update tournament team:",
-      error,
-    );
-
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to change team.",
-    };
+    return failure(error, "Failed to change team.");
   }
 }
-
-/* -------------------------------------------------------
-   Remove team from tournament
-------------------------------------------------------- */
-
-const removeTournamentTeamSchema = z.object({
-  tournamentTeamId: z.string().min(1),
-  tournamentId: z.string().min(1),
-});
 
 export async function removeTeamFromTournamentAction(
   formData: FormData,
-) {
-  const result =
-    removeTournamentTeamSchema.safeParse({
-      tournamentTeamId: formData.get(
-        "tournamentTeamId",
-      ),
-      tournamentId: formData.get("tournamentId"),
-    });
-
-  if (!result.success) {
-    return {
-      success: false,
-      error: "Invalid tournament team.",
-    };
-  }
+): Promise<ActionResult> {
+  const tournamentTeamId = formData.get("tournamentTeamId");
+  const tournamentId = formData.get("tournamentId");
+  if (typeof tournamentTeamId !== "string" || typeof tournamentId !== "string" || !tournamentTeamId || !tournamentId) return failure("Invalid tournament team.", "Invalid tournament team.");
 
   try {
-    await removeTeamFromTournament(
-      result.data.tournamentTeamId,
-    );
-
-    revalidatePath(
-      `/tournaments/${result.data.tournamentId}`,
-    );
-
-    revalidatePath(
-      `/tournaments/${result.data.tournamentId}/regular-season`,
-    );
-
-    revalidatePath(
-      `/tournaments/${result.data.tournamentId}/playoffs`,
-    );
-
-    return {
-      success: true,
-    };
+    await removeTeamFromTournament(tournamentTeamId);
+    revalidateTournament(tournamentId);
+    return { success: true };
   } catch (error) {
-    console.error(
-      "Failed to remove team from tournament:",
-      error,
-    );
-
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to remove team from tournament.",
-    };
+    return failure(error, "Failed to remove team from tournament.");
   }
 }
 
-/* -------------------------------------------------------
-   Save regular-season standings
-------------------------------------------------------- */
-
 const standingRowSchema = z.object({
   tournamentTeamId: z.string().min(1),
-
-  position: z.coerce
-    .number()
-    .int()
-    .min(1),
-
-  played: z.coerce
-    .number()
-    .int()
-    .min(0),
-
-  wins: z.coerce
-    .number()
-    .int()
-    .min(0),
-
-  draws: z.coerce
-    .number()
-    .int()
-    .min(0),
-
-  losses: z.coerce
-    .number()
-    .int()
-    .min(0),
-
-  goalsFor: z.coerce
-    .number()
-    .int()
-    .min(0),
-
-  goalsAgainst: z.coerce
-    .number()
-    .int()
-    .min(0),
-
-  points: z.coerce
-    .number()
-    .int()
-    .min(0),
-});
-
-const standingsSchema = z.object({
-  tournamentId: z.string().min(1),
-  rows: z.array(standingRowSchema),
+  position: z.coerce.number().int().min(1),
+  played: z.coerce.number().int().min(0),
+  wins: z.coerce.number().int().min(0),
+  draws: z.coerce.number().int().min(0),
+  losses: z.coerce.number().int().min(0),
+  goalsFor: z.coerce.number().int().min(0),
+  goalsAgainst: z.coerce.number().int().min(0),
+  points: z.coerce.number().int().min(0),
 });
 
 export async function saveTournamentStandingsAction(
   formData: FormData,
-) {
-  const rawRows = formData.get("rows");
-
+): Promise<ActionResult> {
+  const tournamentId = formData.get("tournamentId");
   let rows: unknown;
-
   try {
-    rows = JSON.parse(
-      typeof rawRows === "string"
-        ? rawRows
-        : "[]",
-    );
+    rows = JSON.parse(String(formData.get("rows") ?? "[]"));
   } catch {
-    return {
-      success: false,
-      error: "Invalid standings data.",
-    };
+    return failure("Invalid standings data.", "Invalid standings data.");
   }
-
-  const result = standingsSchema.safeParse({
-    tournamentId:
-      formData.get("tournamentId"),
-    rows,
-  });
-
-  if (!result.success) {
-    console.error(
-      "Invalid standings:",
-      result.error,
-    );
-
-    return {
-      success: false,
-      error:
-        result.error.issues[0]?.message ??
-        "Invalid standings data.",
-    };
-  }
+  const result = z.object({ tournamentId: z.string().min(1), rows: z.array(standingRowSchema) }).safeParse({ tournamentId, rows });
+  if (!result.success) return failure(result.error.issues[0]?.message, "Invalid standings data.");
 
   try {
-    await saveTournamentStandings(
-      result.data.tournamentId,
-      result.data.rows,
-    );
-
-    revalidatePath(
-      `/tournaments/${result.data.tournamentId}/regular-season`,
-    );
-
-    revalidatePath(
-      `/tournaments/${result.data.tournamentId}/playoffs`,
-    );
-
+    await saveTournamentStandings(result.data.tournamentId, result.data.rows);
+    revalidatePath(`/tournaments/${result.data.tournamentId}/regular-season`);
+    revalidatePath(`/tournaments/${result.data.tournamentId}/playoffs`);
     revalidatePath("/statistics");
-
-    return {
-      success: true,
-    };
+    return { success: true };
   } catch (error) {
-    console.error(
-      "Failed to save tournament standings:",
-      error,
-    );
-
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to save standings.",
-    };
+    return failure(error, "Failed to save standings.");
   }
 }
 
-/* -------------------------------------------------------
-   Semi-final
-------------------------------------------------------- */
-
-function parseOptionalScore(
-  value: FormDataEntryValue | null,
-): number | null {
-  if (
-    typeof value !== "string" ||
-    value.trim() === ""
-  ) {
-    return null;
-  }
-
-  const score = Number(value);
-
-  if (
-    !Number.isInteger(score) ||
-    score < 0
-  ) {
-    return null;
-  }
-
-  return score;
+function score(value: FormDataEntryValue | null) {
+  if (typeof value !== "string" || value.trim() === "") return null;
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed >= 0 ? parsed : null;
 }
-
-const semiFinalSchema = z.object({
-  tournamentId: z.string().min(1),
-
-  number: z.coerce
-    .number()
-    .int()
-    .min(1)
-    .max(2),
-
-  teamAId: z.string().min(1),
-
-  teamBId: z.string().min(1),
-
-  leg1TeamAScore: z.number().int().min(0).nullable(),
-
-  leg1TeamBScore: z.number().int().min(0).nullable(),
-
-  leg2TeamAScore: z.number().int().min(0).nullable(),
-
-  leg2TeamBScore: z.number().int().min(0).nullable(),
-});
 
 export async function saveSemiFinalAction(
   formData: FormData,
-) {
-  const result =
-    semiFinalSchema.safeParse({
-      tournamentId:
-        formData.get("tournamentId"),
-
-      number:
-        formData.get("number"),
-
-      teamAId:
-        formData.get("teamAId"),
-
-      teamBId:
-        formData.get("teamBId"),
-
-      leg1TeamAScore:
-        parseOptionalScore(
-          formData.get(
-            "leg1TeamAScore",
-          ),
-        ),
-
-      leg1TeamBScore:
-        parseOptionalScore(
-          formData.get(
-            "leg1TeamBScore",
-          ),
-        ),
-
-      leg2TeamAScore:
-        parseOptionalScore(
-          formData.get(
-            "leg2TeamAScore",
-          ),
-        ),
-
-      leg2TeamBScore:
-        parseOptionalScore(
-          formData.get(
-            "leg2TeamBScore",
-          ),
-        ),
-    });
-
-  if (!result.success) {
-    console.error(
-      "Invalid semi-final:",
-      result.error,
-    );
-
-    return {
-      success: false,
-      error:
-        result.error.issues[0]?.message ??
-        "Invalid semi-final data.",
-    };
-  }
-
-  if (
-    result.data.teamAId ===
-    result.data.teamBId
-  ) {
-    return {
-      success: false,
-      error:
-        "Semi-final teams must be different.",
-    };
-  }
+): Promise<ActionResult> {
+  const tournamentId = formData.get("tournamentId");
+  const number = Number(formData.get("number"));
+  const teamAId = formData.get("teamAId");
+  const teamBId = formData.get("teamBId");
+  if (typeof tournamentId !== "string" || typeof teamAId !== "string" || typeof teamBId !== "string" || !tournamentId || !teamAId || !teamBId || ![1, 2].includes(number)) return failure("Invalid semi-final data.", "Invalid semi-final data.");
+  if (teamAId === teamBId) return failure("Semi-final teams must be different.", "Invalid semi-final data.");
 
   try {
-    await saveSemiFinal(
-      result.data.tournamentId,
-      result.data.number,
-      result.data.teamAId,
-      result.data.teamBId,
-      result.data.leg1TeamAScore,
-      result.data.leg1TeamBScore,
-      result.data.leg2TeamAScore,
-      result.data.leg2TeamBScore,
-    );
-
-    revalidatePath(
-      `/tournaments/${result.data.tournamentId}/playoffs`,
-    );
-
-    revalidatePath(
-      `/statistics`,
-    );
-
-    return {
-      success: true,
-    };
+    await saveSemiFinal(tournamentId, number, teamAId, teamBId, score(formData.get("leg1TeamAScore")), score(formData.get("leg1TeamBScore")), score(formData.get("leg2TeamAScore")), score(formData.get("leg2TeamBScore")));
+    revalidatePath(`/tournaments/${tournamentId}/playoffs`);
+    revalidatePath("/statistics");
+    return { success: true };
   } catch (error) {
-    console.error(
-      "Failed to save semi-final:",
-      error,
-    );
-
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to save semi-final.",
-    };
+    return failure(error, "Failed to save semi-final.");
   }
 }
 
-/* -------------------------------------------------------
-   Final
-------------------------------------------------------- */
-
-const finalSchema = z.object({
-  tournamentId: z.string().min(1),
-
-  teamAId: z.string().min(1),
-
-  teamBId: z.string().min(1),
-});
-
 export async function saveFinalAction(
   formData: FormData,
-) {
-  const result = finalSchema.safeParse({
-    tournamentId:
-      formData.get("tournamentId"),
-
-    teamAId:
-      formData.get("teamAId"),
-
-    teamBId:
-      formData.get("teamBId"),
-  });
-
-  if (!result.success) {
-    return {
-      success: false,
-      error:
-        result.error.issues[0]?.message ??
-        "Invalid final data.",
-    };
-  }
-
-  if (
-    result.data.teamAId ===
-    result.data.teamBId
-  ) {
-    return {
-      success: false,
-      error:
-        "Finalists must be different.",
-    };
-  }
-
-  const teamAScore =
-    parseOptionalScore(
-      formData.get("teamAScore"),
-    );
-
-  const teamBScore =
-    parseOptionalScore(
-      formData.get("teamBScore"),
-    );
-
-  if (
-    teamAScore === null ||
-    teamBScore === null
-  ) {
-    return {
-      success: false,
-      error: "Both final scores are required.",
-    };
-  }
+): Promise<ActionResult> {
+  const tournamentId = formData.get("tournamentId");
+  const teamAId = formData.get("teamAId");
+  const teamBId = formData.get("teamBId");
+  const teamAScore = score(formData.get("teamAScore"));
+  const teamBScore = score(formData.get("teamBScore"));
+  if (typeof tournamentId !== "string" || typeof teamAId !== "string" || typeof teamBId !== "string" || !tournamentId || !teamAId || !teamBId || teamAScore === null || teamBScore === null) return failure("Invalid final data.", "Invalid final data.");
+  if (teamAId === teamBId) return failure("Finalists must be different.", "Invalid final data.");
 
   try {
-    await saveFinal(
-      result.data.tournamentId,
-      result.data.teamAId,
-      result.data.teamBId,
-      teamAScore,
-      teamBScore,
-    );
-
-    revalidatePath(
-      `/tournaments/${result.data.tournamentId}/playoffs`,
-    );
-
+    await saveFinal(tournamentId, teamAId, teamBId, teamAScore, teamBScore);
+    revalidatePath(`/tournaments/${tournamentId}/playoffs`);
     revalidatePath("/statistics");
-
-    return {
-      success: true,
-    };
+    return { success: true };
   } catch (error) {
-    console.error(
-      "Failed to save final:",
-      error,
-    );
-
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to save final.",
-    };
+    return failure(error, "Failed to save final.");
   }
+}
+
+function revalidateTournament(tournamentId: string) {
+  revalidatePath(`/tournaments/${tournamentId}`);
+  revalidatePath(`/tournaments/${tournamentId}/regular-season`);
+  revalidatePath(`/tournaments/${tournamentId}/playoffs`);
 }

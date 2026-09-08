@@ -44,7 +44,9 @@ export async function getTournaments(): Promise<
 
   return tournaments
     .filter(
-      (tournament): tournament is Tournament =>
+      (
+        tournament,
+      ): tournament is Tournament =>
         tournament !== null,
     )
     .sort(
@@ -100,7 +102,8 @@ export async function createTournament(
     name: trimmedName,
     startDate,
     endDate,
-    createdAt: new Date().toISOString(),
+    createdAt:
+      new Date().toISOString(),
   };
 
   await redis.set(
@@ -114,6 +117,66 @@ export async function createTournament(
   );
 
   return tournament;
+}
+
+export async function updateTournament(
+  tournamentId: string,
+  name: string,
+  startDate: string,
+  endDate: string,
+): Promise<Tournament> {
+  await requireAdmin();
+
+  const existing =
+    await redis.get<Tournament>(
+      tournamentKey(tournamentId),
+    );
+
+  if (!existing) {
+    throw new Error(
+      "Tournament not found.",
+    );
+  }
+
+  const trimmedName = name.trim();
+
+  if (!trimmedName) {
+    throw new Error(
+      "Tournament name is required.",
+    );
+  }
+
+  if (!startDate) {
+    throw new Error(
+      "Tournament start date is required.",
+    );
+  }
+
+  if (!endDate) {
+    throw new Error(
+      "Tournament end date is required.",
+    );
+  }
+
+  if (endDate < startDate) {
+    throw new Error(
+      "Tournament end date cannot be before the start date.",
+    );
+  }
+
+  const updated: Tournament = {
+    ...existing,
+    name: trimmedName,
+    startDate,
+    endDate,
+  };
+
+  await redis.set(
+    tournamentKey(updated.id),
+    updated,
+  );
+
+  return updated;
 }
 
 export async function getTournamentTeams(
@@ -137,7 +200,9 @@ export async function getTournamentTeams(
     );
 
   return tournamentTeams.filter(
-    (item): item is TournamentTeam =>
+    (
+      item,
+    ): item is TournamentTeam =>
       item !== null,
   );
 }
@@ -153,9 +218,11 @@ export async function addTeamToTournament(
       tournamentId,
     );
 
-  const existing = teamsInTournament.find(
-    (item) => item.teamId === teamId,
-  );
+  const existing =
+    teamsInTournament.find(
+      (item) =>
+        item.teamId === teamId,
+    );
 
   if (existing) {
     return existing;
@@ -176,7 +243,9 @@ export async function addTeamToTournament(
   );
 
   await redis.sadd(
-    tournamentTeamsKey(tournamentId),
+    tournamentTeamsKey(
+      tournamentId,
+    ),
     tournamentTeam.id,
   );
 
@@ -204,7 +273,9 @@ export async function assignPlayersToTournamentTeam(
 
   const updated: TournamentTeam = {
     ...existing,
-    playerIds: [...new Set(playerIds)],
+    playerIds: [
+      ...new Set(playerIds),
+    ],
   };
 
   await redis.set(
