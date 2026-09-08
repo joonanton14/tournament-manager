@@ -19,12 +19,22 @@ type StatisticsPageProps = {
   }>;
 };
 
-function formatDateTime(value: string) {
+function formatDateTime(value: string | null | undefined) {
+  if (!value) {
+    return "Ei määritetty";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Ei määritetty";
+  }
+
   return new Intl.DateTimeFormat("fi-FI", {
-    dateStyle: "medium",
+    dateStyle: "short",
     timeStyle: "short",
     timeZone: "Europe/Helsinki",
-  }).format(new Date(value));
+  }).format(date);
 }
 
 export default async function StatisticsPage({
