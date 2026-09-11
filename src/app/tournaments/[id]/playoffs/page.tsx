@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { Card } from "@/components/Card";
 
@@ -10,6 +10,7 @@ import { SemiFinalForm } from "@/components/tournaments/SemiFinalForm";
 
 import { FinalForm } from "@/components/tournaments/FinalForm";
 
+import { isAdminAuthenticated } from "@/lib/auth";
 import { getTeams } from "@/lib/teams";
 
 import {
@@ -80,6 +81,12 @@ function getSemiFinalWinnerTeamId(
 export default async function PlayoffsPage({
   params,
 }: PlayoffsPageProps) {
+  const authenticated = await isAdminAuthenticated();
+
+  if (!authenticated) {
+    redirect("/admin/login");
+  }
+
   const { id } = await params;
 
   const [
@@ -137,8 +144,8 @@ export default async function PlayoffsPage({
   const isFourTeamFormat =
     teamCount === 4;
 
-  const isFiveTeamFormat =
-    teamCount === 5;
+  const isFivePlusTeamFormat =
+    teamCount >= 5;
 
   const firstPlace =
     teamsWithStandings.find(
@@ -228,7 +235,7 @@ export default async function PlayoffsPage({
    */
 
   const fiveTeamSemiFinal1 =
-    isFiveTeamFormat &&
+    isFivePlusTeamFormat &&
     firstPlace &&
     fourthPlace
       ? semiFinal1 &&
@@ -251,7 +258,7 @@ export default async function PlayoffsPage({
       : undefined;
 
   const fiveTeamSemiFinal2 =
-    isFiveTeamFormat &&
+    isFivePlusTeamFormat &&
     secondPlace &&
     thirdPlace
       ? semiFinal2 &&
@@ -340,7 +347,7 @@ export default async function PlayoffsPage({
       fourTeamSemiFinalWinner;
   }
 
-  if (isFiveTeamFormat) {
+  if (isFivePlusTeamFormat) {
     /*
      * Five-team format:
      *
@@ -397,8 +404,8 @@ export default async function PlayoffsPage({
     teamsWithStandings.length === 4;
 
   const fiveTeamStandingsReady =
-    isFiveTeamFormat &&
-    teamsWithStandings.length === 5;
+    isFivePlusTeamFormat &&
+    teamsWithStandings.length >= 5;
 
   return (
     <div className="min-h-[calc(100vh-72px)]">
@@ -563,7 +570,7 @@ export default async function PlayoffsPage({
               title="Finaali"
             />
           </>
-        ) : isFiveTeamFormat ? (
+        ) : isFivePlusTeamFormat ? (
           <>
             <section className="mt-8">
               <Card className="overflow-hidden">

@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { Card } from "@/components/Card";
 import { TournamentTabs } from "@/components/tournaments/TournamentTabs";
 import { RegularSeasonTable } from "@/components/tournaments/RegularSeasonTable";
 
+import { isAdminAuthenticated } from "@/lib/auth";
 import { getTeams } from "@/lib/teams";
 import { getTournamentById, getTournamentTeamDetails } from "@/lib/tournaments";
 import { getTournamentStandings } from "@/lib/standings";
@@ -20,6 +21,12 @@ type RegularSeasonPageProps = {
 export default async function RegularSeasonPage({
   params,
 }: RegularSeasonPageProps) {
+  const authenticated = await isAdminAuthenticated();
+
+  if (!authenticated) {
+    redirect("/admin/login");
+  }
+
   const { id } = await params;
 
   const [tournament, teams, standings] =

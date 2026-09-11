@@ -3,8 +3,8 @@ import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 
 export const metadata: Metadata = {
-  title: "FIFA Tournament Manager",
-  description: "Manage FIFA tournaments, teams, players, results and scorers.",
+  title: "FIFA Turnausmanager",
+  description: "Hallinnoi FIFA-turnauksia, joukkueita, pelaajia, tuloksia ja sijoituksia.",
 };
 
 export default function RootLayout({
@@ -13,7 +13,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="fi">
       <body className="min-h-screen bg-[#f1f3f7] text-slate-950 antialiased">
         <Navbar />
 

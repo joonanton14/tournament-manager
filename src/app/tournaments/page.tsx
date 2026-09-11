@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Card } from "@/components/Card";
 import { TournamentForm } from "@/components/tournaments/TournamentForm";
+import { isAdminAuthenticated } from "@/lib/auth";
 import { getTournaments } from "@/lib/tournaments";
 
 export const dynamic = "force-dynamic";
@@ -24,6 +26,12 @@ function formatDateTime(value: string | null | undefined) {
 }
 
 export default async function TournamentsPage() {
+  const authenticated = await isAdminAuthenticated();
+
+  if (!authenticated) {
+    redirect("/admin/login");
+  }
+
   const tournaments = await getTournaments();
 
   return (

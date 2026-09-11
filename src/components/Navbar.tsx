@@ -3,7 +3,7 @@ import { Logo } from "@/components/Logo";
 
 const navigation = [
   {
-    label: "Turnaus historia",
+    label: "Turnaushistoria",
     href: "/statistics",
   },
 ];
@@ -30,7 +30,7 @@ export function Navbar() {
           href="/admin"
           className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700"
         >
-          Admin
+          Ylläpito
         </Link>
       </div>
     </header>

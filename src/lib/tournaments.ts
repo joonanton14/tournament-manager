@@ -271,11 +271,39 @@ export async function assignPlayersToTournamentTeam(
     );
   }
 
+  const tournamentTeams =
+    await getTournamentTeams(
+      existing.tournamentId,
+    );
+
+  const uniquePlayerIds = [
+    ...new Set(playerIds),
+  ];
+
+  const alreadyAssigned =
+    tournamentTeams
+      .filter(
+        (tournamentTeam) =>
+          tournamentTeam.id !==
+          tournamentTeamId,
+      )
+      .flatMap(
+        (tournamentTeam) =>
+          tournamentTeam.playerIds,
+      )
+      .some((playerId) =>
+        uniquePlayerIds.includes(playerId),
+      );
+
+  if (alreadyAssigned) {
+    throw new Error(
+      "A player cannot be assigned to more than one team in the same tournament.",
+    );
+  }
+
   const updated: TournamentTeam = {
     ...existing,
-    playerIds: [
-      ...new Set(playerIds),
-    ],
+    playerIds: uniquePlayerIds,
   };
 
   await redis.set(

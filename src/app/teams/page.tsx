@@ -1,12 +1,21 @@
+import { redirect } from "next/navigation";
+
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { TeamForm } from "@/components/teams/TeamForm";
 import { TeamList } from "@/components/teams/TeamList";
+import { isAdminAuthenticated } from "@/lib/auth";
 import { getTeams } from "@/lib/teams";
 
 export const dynamic = "force-dynamic";
 
 export default async function TeamsPage() {
+  const authenticated = await isAdminAuthenticated();
+
+  if (!authenticated) {
+    redirect("/admin/login");
+  }
+
   const teams = await getTeams();
 
   return (

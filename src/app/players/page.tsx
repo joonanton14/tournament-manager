@@ -1,12 +1,21 @@
+import { redirect } from "next/navigation";
+
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { PlayerForm } from "@/components/players/PlayerForm";
 import { PlayerList } from "@/components/players/PlayerList";
+import { isAdminAuthenticated } from "@/lib/auth";
 import { getPlayers } from "@/lib/players";
 
 export const dynamic = "force-dynamic";
 
 export default async function PlayersPage() {
+    const authenticated = await isAdminAuthenticated();
+
+    if (!authenticated) {
+        redirect("/admin/login");
+    }
+
     const players = await getPlayers();
 
     return (
