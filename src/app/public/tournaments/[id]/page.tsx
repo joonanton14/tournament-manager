@@ -371,13 +371,60 @@ function PlayoffMatchCard({
       ? leg1ScoreB
       : leg1ScoreB + leg2ScoreB;
 
+  if (isFinal) {
+    return (
+      <div className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm">
+        <div className="rounded-xl bg-slate-100 p-3">
+          <div className="flex items-center justify-between gap-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
+            <span>Finaali</span>
+            <span>Yksi ottelu</span>
+          </div>
+
+          <div className="mt-3 flex items-center justify-between gap-3">
+            <div className="min-w-0 flex-1 text-left">
+              <p className="truncate text-base font-black text-slate-950">{teamA?.name ?? "TBD"}</p>
+            </div>
+            <div className="flex items-center gap-2 rounded-lg bg-white px-2.5 py-1.5 text-lg font-black text-slate-900">
+              <span>{leg1ScoreA ?? "—"}</span>
+              <span className="text-slate-400">:</span>
+              <span>{leg1ScoreB ?? "—"}</span>
+            </div>
+            <div className="min-w-0 flex-1 text-right">
+              <p className="truncate text-base font-black text-slate-950">{teamB?.name ?? "TBD"}</p>
+            </div>
+          </div>
+
+          <p className="mt-2 text-xs text-slate-600">{firstLegLabel}</p>
+        </div>
+
+        <div className="mt-3 rounded-xl bg-violet-100 p-3">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-violet-700">
+                Tulos
+              </div>
+              <div className="mt-1 text-lg font-black text-violet-900">
+                {teamA?.name ?? "TBD"} {leg1ScoreA ?? "—"} - {leg1ScoreB ?? "—"} {teamB?.name ?? "TBD"}
+              </div>
+            </div>
+            {winner && (
+              <span className="rounded-full bg-violet-600 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.18em] text-white">
+                {winner.name} voitti
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm">
       <div className="space-y-3">
         <div className="rounded-xl bg-slate-100 p-3">
           <div className="flex items-center justify-between gap-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
             <span>Leg 1</span>
-            <span>{isFinal ? "Finaali" : "Ensimmäinen osa"}</span>
+            <span>Ensimmäinen osa</span>
           </div>
           <div className="mt-2 flex items-center justify-between gap-3">
             <div className="min-w-0 flex-1 text-left">
@@ -398,7 +445,7 @@ function PlayoffMatchCard({
         <div className="rounded-xl bg-slate-100 p-3">
           <div className="flex items-center justify-between gap-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
             <span>Leg 2</span>
-            <span>{isFinal ? "Finaali" : "Toinen osa"}</span>
+            <span>Toinen osa</span>
           </div>
           <div className="mt-2 flex items-center justify-between gap-3">
             <div className="min-w-0 flex-1 text-left">
@@ -432,7 +479,7 @@ function PlayoffMatchCard({
               </span>
             )}
           </div>
-          {!hasTwoLegs && !isFinal && (
+          {!hasTwoLegs && (
             <p className="mt-2 text-xs text-violet-700">Kahden osaottelun tuloksia ei ole vielä täytetty.</p>
           )}
         </div>
