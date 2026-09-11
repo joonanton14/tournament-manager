@@ -218,22 +218,25 @@ export default async function PublicTournamentPage({
                 const winnerId = getWinnerTeamId(playoff);
 
                 return (
-                  <Card key={`${playoff.stage}-${playoff.number}`} className="p-5">
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="text-sm font-bold uppercase tracking-[0.18em] text-violet-600">
+                  <Card
+                    key={`${playoff.stage}-${playoff.number}`}
+                    className="overflow-hidden border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-0"
+                  >
+                    <div className="flex items-center justify-between gap-3 border-b border-slate-200 bg-slate-950 px-4 py-3 text-white">
+                      <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-violet-300">
                         {playoff.stage === "semi_final"
                           ? `Välierä ${playoff.number}`
                           : "Finaali"}
                       </p>
 
                       {winnerId && teamA && teamB && (
-                        <span className="rounded-full bg-violet-100 px-2.5 py-1 text-xs font-bold text-violet-700">
-                          Voittaja: {winnerId === teamA.id ? teamA.name : teamB.name}
+                        <span className="rounded-full bg-violet-500/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-violet-100">
+                          {winnerId === teamA.id ? teamA.name : teamB.name} voitti
                         </span>
                       )}
                     </div>
 
-                    <div className="mt-5 grid gap-3 md:grid-cols-2">
+                    <div className="grid gap-3 p-4 md:grid-cols-2">
                       <PlayoffTeamCard
                         team={teamA}
                         score={teamAScore}
@@ -360,40 +363,56 @@ function PlayoffTeamCard({
   return (
     <div
       className={[
-        "rounded-2xl border p-4",
-        isWinner ? "border-violet-200 bg-violet-50" : "border-slate-200 bg-slate-50",
+        "rounded-2xl border p-3.5 transition-all",
+        isWinner
+          ? "border-violet-200 bg-violet-50 shadow-sm shadow-violet-100"
+          : "border-slate-200 bg-white",
       ].join(" ")}
     >
       <div className="flex items-center justify-between gap-3">
-        <p className="text-lg font-black text-slate-950">{team?.name ?? "TBD"}</p>
+        <p className="text-base font-black text-slate-950">{team?.name ?? "TBD"}</p>
         {isWinner && (
-          <span className="rounded-full bg-violet-600 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-white">
-            Winner
+          <span className="rounded-full bg-violet-600 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.18em] text-white">
+            Voittaja
           </span>
         )}
       </div>
 
-      <div className="mt-3 flex items-center gap-3 text-sm text-slate-600">
+      <div className="mt-3 space-y-2 text-sm text-slate-600">
         {hasTwoLegs && !isFinal ? (
           <>
-            <span className="rounded-lg bg-white px-2 py-1 font-bold text-slate-900">
-              {score ?? "—"}
-            </span>
-            <span>+</span>
-            <span className="rounded-lg bg-white px-2 py-1 font-bold text-slate-900">
-              {secondLegScore ?? "—"}
-            </span>
-            <span className="font-semibold text-slate-900">= {total ?? "—"}</span>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded-xl bg-slate-100 px-2.5 py-2">
+                <div className="text-[9px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                  Ottelu 1
+                </div>
+                <div className="mt-1 text-xl font-black text-slate-900">{score ?? "—"}</div>
+              </div>
+
+              <div className="rounded-xl bg-slate-100 px-2.5 py-2">
+                <div className="text-[9px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                  Ottelu 2
+                </div>
+                <div className="mt-1 text-xl font-black text-slate-900">
+                  {secondLegScore ?? "—"}
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-xl bg-violet-100 px-3 py-2.5">
+              <div className="text-[9px] font-bold uppercase tracking-[0.18em] text-violet-700">
+                Yhteensä
+              </div>
+              <div className="mt-1 text-lg font-black text-violet-900">{total ?? "—"}</div>
+            </div>
           </>
         ) : (
-          <>
-            <span className="rounded-lg bg-white px-2 py-1 font-bold text-slate-900">
-              {displayScore ?? "—"}
-            </span>
-            {!isFinal && total !== null && (
-              <span className="font-semibold text-slate-900">= {total}</span>
-            )}
-          </>
+          <div className="rounded-xl bg-slate-100 px-3 py-2.5">
+            <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
+              {isFinal ? "Tulos" : "Pisteet"}
+            </div>
+            <div className="mt-1 text-2xl font-black text-slate-900">{displayScore ?? "—"}</div>
+          </div>
         )}
       </div>
     </div>

@@ -190,6 +190,9 @@ export async function saveTournamentStandingsAction(
 
   try {
     await saveTournamentStandings(result.data.tournamentId, result.data.rows);
+    revalidatePath("/");
+    revalidatePath(`/public/tournaments/${result.data.tournamentId}`);
+    revalidatePath(`/tournaments/${result.data.tournamentId}`);
     revalidatePath(`/tournaments/${result.data.tournamentId}/regular-season`);
     revalidatePath(`/tournaments/${result.data.tournamentId}/playoffs`);
     revalidatePath("/statistics");
@@ -217,6 +220,9 @@ export async function saveSemiFinalAction(
 
   try {
     await saveSemiFinal(tournamentId, number, teamAId, teamBId, score(formData.get("leg1TeamAScore")), score(formData.get("leg1TeamBScore")), score(formData.get("leg2TeamAScore")), score(formData.get("leg2TeamBScore")));
+    revalidatePath("/");
+    revalidatePath(`/public/tournaments/${tournamentId}`);
+    revalidatePath(`/tournaments/${tournamentId}`);
     revalidatePath(`/tournaments/${tournamentId}/playoffs`);
     revalidatePath("/statistics");
     return { success: true };
@@ -238,6 +244,9 @@ export async function saveFinalAction(
 
   try {
     await saveFinal(tournamentId, teamAId, teamBId, teamAScore, teamBScore);
+    revalidatePath("/");
+    revalidatePath(`/public/tournaments/${tournamentId}`);
+    revalidatePath(`/tournaments/${tournamentId}`);
     revalidatePath(`/tournaments/${tournamentId}/playoffs`);
     revalidatePath("/statistics");
     return { success: true };

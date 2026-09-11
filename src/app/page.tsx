@@ -355,12 +355,43 @@ async function getOverallPodiums(
       }
     }
 
+    const final = playoffs.find((playoff) => playoff.stage === "final");
+    const winnerTeamId = final
+      ? resolvePlayoffWinnerTeamId(final)
+      : standings.find((standing) => standing.position === 1)
+        ? tournamentTeamDetails.find(
+            (detail) => detail.tournamentTeam.id === standings.find((s) => s.position === 1)?.tournamentTeamId,
+          )?.team.id ?? null
+        : null;
+
+    const secondPlaceTeamId = final
+      ? resolvePlayoffLoserTeamId(final)
+      : standings.find((standing) => standing.position === 2)
+        ? tournamentTeamDetails.find(
+            (detail) => detail.tournamentTeam.id === standings.find((s) => s.position === 2)?.tournamentTeamId,
+          )?.team.id ?? null
+        : null;
+
     const thirdPlaceTeamId = resolveThirdPlaceTeamId(
       standings,
       tournamentTeamDetails,
       playoffs,
       regularSeasonTeamPositions,
     );
+
+    const tournamentPlayerIdsForWinner =
+      winnerTeamId === null
+        ? []
+        : (
+            tournamentTeamDetails.find((detail) => detail.team.id === winnerTeamId)?.tournamentTeam.playerIds ?? []
+          );
+
+    const tournamentPlayerIdsForSecondPlace =
+      secondPlaceTeamId === null
+        ? []
+        : (
+            tournamentTeamDetails.find((detail) => detail.team.id === secondPlaceTeamId)?.tournamentTeam.playerIds ?? []
+          );
 
     const tournamentPlayerIdsForThirdPlace =
       thirdPlaceTeamId === null
@@ -399,10 +430,14 @@ async function getOverallPodiums(
           thirdPlaces: 0,
         };
 
-        if (standing.position === 1) {
+        if (tournamentPlayerIdsForWinner.includes(playerId) && !processedPlayerIds.has(player.id)) {
           current.wins += 1;
-        } else if (standing.position === 2) {
+          processedPlayerIds.add(player.id);
+        }
+
+        if (tournamentPlayerIdsForSecondPlace.includes(playerId) && !processedPlayerIds.has(player.id)) {
           current.secondPlaces += 1;
+          processedPlayerIds.add(player.id);
         }
 
         if (
@@ -428,6 +463,35 @@ async function getOverallPodiums(
       .sort((a, b) => b.thirdPlaces - a.thirdPlaces || a.name.localeCompare(b.name))
       .slice(0, 3),
   };
+}
+
+function resolvePlayoffWinnerTeamId(playoff: Awaited<ReturnType<typeof getTournamentPlayoffs>>[number]) {
+  const teamAScore = playoff.leg1TeamAScore;
+  const teamBScore = playoff.leg1TeamBScore;
+
+  if (teamAScore === null || teamBScore === null) {
+    return null;
+  }
+
+  if (teamAScore > teamBScore) {
+    return playoff.teamAId;
+  }
+
+  if (teamBScore > teamAScore) {
+    return playoff.teamBId;
+  }
+
+  return null;
+}
+
+function resolvePlayoffLoserTeamId(playoff: Awaited<ReturnType<typeof getTournamentPlayoffs>>[number]) {
+  const winnerId = resolvePlayoffWinnerTeamId(playoff);
+
+  if (!winnerId) {
+    return null;
+  }
+
+  return winnerId === playoff.teamAId ? playoff.teamBId : playoff.teamAId;
 }
 
 function resolveThirdPlaceTeamId(
