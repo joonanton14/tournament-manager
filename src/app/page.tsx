@@ -176,7 +176,7 @@ export default async function HomePage() {
             </div>
           </div>
 
-          <Card className="p-5">
+          <Card className="hidden p-5 xl:block">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-violet-600">
