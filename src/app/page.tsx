@@ -110,9 +110,6 @@ export default async function HomePage() {
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
         <header className="rounded-3xl border border-violet-200 bg-[radial-gradient(circle_at_top_left,_rgba(167,139,250,0.22),_transparent_45%),linear-gradient(135deg,#0f172a,#111827)] p-6 text-white shadow-xl shadow-violet-900/10 sm:p-8">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.24em] text-violet-300">
-              Turnauskeskus
-            </p>
             <h1 className="mt-3 text-3xl font-black tracking-tight sm:text-5xl">
               Turnausten yhteenveto
             </h1>
@@ -123,30 +120,18 @@ export default async function HomePage() {
           <MetricCard
             label="Turnaukset"
             value={String(tournaments.length)}
-            detail="Pelattu historia"
           />
           <MetricCard
             label="Pelaajat"
             value={String(players.length)}
-            detail="Seuratut pelaajat"
           />
           <MetricCard
             label="Eniten voittoja"
             value={podiums.wins[0]?.name ?? "—"}
-            detail={
-              podiums.wins[0]
-                ? `${podiums.wins[0].wins} voittoa`
-                : "Ei tuloksia vielä"
-            }
           />
           <MetricCard
-            label="Viimeinen finaali"
+            label="Viimeisin voittaja"
             value={latestTournament?.championName ?? "Keskeneräinen"}
-            detail={
-              latestTournament
-                ? `Turnaus #${latestTournament.tournament.number}`
-                : "Ei turnausta vielä"
-            }
           />
         </section>
 
@@ -596,15 +581,13 @@ function formatDateShort(value: string | null | undefined) {
 type MetricCardProps = {
   label: string;
   value: string;
-  detail: string;
 };
 
-function MetricCard({ label, value, detail }: MetricCardProps) {
+function MetricCard({ label, value }: MetricCardProps) {
   return (
     <Card className="p-4">
       <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">{label}</p>
       <p className="mt-3 text-2xl font-black tracking-tight text-slate-950">{value}</p>
-      <p className="mt-1 text-xs text-slate-500">{detail}</p>
     </Card>
   );
 }

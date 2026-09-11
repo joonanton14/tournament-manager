@@ -15,9 +15,6 @@ export function Logo() {
         <div className="text-sm font-bold tracking-tight text-slate-950">
           FIFA Manualturnaus
         </div>
-        <div className="text-xs font-medium text-slate-500">
-          Turnausten hallinta
-        </div>
       </div>
     </Link>
   );
