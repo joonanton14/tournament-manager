@@ -236,20 +236,15 @@ export default async function PublicTournamentPage({
                       )}
                     </div>
 
-                    <div className="grid gap-3 p-4 md:grid-cols-2">
-                      <PlayoffTeamCard
-                        team={teamA}
-                        score={teamAScore}
-                        secondLegScore={teamASecondScore}
-                        isWinner={winnerId === teamA?.id}
-                        isFinal={playoff.stage === "final"}
-                      />
-
-                      <PlayoffTeamCard
-                        team={teamB}
-                        score={teamBScore}
-                        secondLegScore={teamBSecondScore}
-                        isWinner={winnerId === teamB?.id}
+                    <div className="p-4">
+                      <PlayoffMatchCard
+                        teamA={teamA}
+                        teamB={teamB}
+                        leg1ScoreA={teamAScore}
+                        leg1ScoreB={teamBScore}
+                        leg2ScoreA={teamASecondScore}
+                        leg2ScoreB={teamBSecondScore}
+                        winnerId={winnerId}
                         isFinal={playoff.stage === "final"}
                       />
                     </div>
@@ -337,83 +332,110 @@ function getWinnerTeamId(playoff: Awaited<ReturnType<typeof getTournamentPlayoff
   return null;
 }
 
-function PlayoffTeamCard({
-  team,
-  score,
-  secondLegScore,
-  isWinner,
+function PlayoffMatchCard({
+  teamA,
+  teamB,
+  leg1ScoreA,
+  leg1ScoreB,
+  leg2ScoreA,
+  leg2ScoreB,
+  winnerId,
   isFinal,
 }: {
-  team?: Team;
-  score: number | null;
-  secondLegScore: number | null;
-  isWinner: boolean;
+  teamA?: Team;
+  teamB?: Team;
+  leg1ScoreA: number | null;
+  leg1ScoreB: number | null;
+  leg2ScoreA: number | null;
+  leg2ScoreB: number | null;
+  winnerId: string | null;
   isFinal: boolean;
 }) {
-  const hasTwoLegs = score !== null && secondLegScore !== null;
+  const hasTwoLegs =
+    leg1ScoreA !== null &&
+    leg1ScoreB !== null &&
+    leg2ScoreA !== null &&
+    leg2ScoreB !== null;
 
-  const displayScore =
-    isFinal || !hasTwoLegs ? score : `${score ?? "—"} + ${secondLegScore ?? "—"}`;
+  const firstLegLabel = teamA && teamB ? `${teamA.name} vs ${teamB.name}` : "Ottelu";
+  const secondLegLabel = teamA && teamB ? `${teamB.name} vs ${teamA.name}` : "Ottelu";
+  const winner = winnerId === teamA?.id ? teamA : winnerId === teamB?.id ? teamB : null;
 
-  const total =
-    score === null || secondLegScore === null || isFinal
-      ? score
-      : score + secondLegScore;
+  const totalA =
+    leg1ScoreA === null || leg2ScoreA === null || isFinal
+      ? leg1ScoreA
+      : leg1ScoreA + leg2ScoreA;
+
+  const totalB =
+    leg1ScoreB === null || leg2ScoreB === null || isFinal
+      ? leg1ScoreB
+      : leg1ScoreB + leg2ScoreB;
 
   return (
-    <div
-      className={[
-        "rounded-2xl border p-3.5 transition-all",
-        isWinner
-          ? "border-violet-200 bg-violet-50 shadow-sm shadow-violet-100"
-          : "border-slate-200 bg-white",
-      ].join(" ")}
-    >
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-base font-black text-slate-950">{team?.name ?? "TBD"}</p>
-        {isWinner && (
-          <span className="rounded-full bg-violet-600 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.18em] text-white">
-            Voittaja
-          </span>
-        )}
-      </div>
-
-      <div className="mt-3 space-y-2 text-sm text-slate-600">
-        {hasTwoLegs && !isFinal ? (
-          <>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="rounded-xl bg-slate-100 px-2.5 py-2">
-                <div className="text-[9px] font-bold uppercase tracking-[0.18em] text-slate-500">
-                  Ottelu 1
-                </div>
-                <div className="mt-1 text-xl font-black text-slate-900">{score ?? "—"}</div>
-              </div>
-
-              <div className="rounded-xl bg-slate-100 px-2.5 py-2">
-                <div className="text-[9px] font-bold uppercase tracking-[0.18em] text-slate-500">
-                  Ottelu 2
-                </div>
-                <div className="mt-1 text-xl font-black text-slate-900">
-                  {secondLegScore ?? "—"}
-                </div>
-              </div>
+    <div className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm">
+      <div className="space-y-3">
+        <div className="rounded-xl bg-slate-100 p-3">
+          <div className="flex items-center justify-between gap-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
+            <span>Leg 1</span>
+            <span>{isFinal ? "Finaali" : "Ensimmäinen osa"}</span>
+          </div>
+          <div className="mt-2 flex items-center justify-between gap-3">
+            <div className="min-w-0 flex-1 text-left">
+              <p className="truncate text-base font-black text-slate-950">{teamA?.name ?? "TBD"}</p>
             </div>
+            <div className="flex items-center gap-2 rounded-lg bg-white px-2.5 py-1.5 text-lg font-black text-slate-900">
+              <span>{leg1ScoreA ?? "—"}</span>
+              <span className="text-slate-400">:</span>
+              <span>{leg1ScoreB ?? "—"}</span>
+            </div>
+            <div className="min-w-0 flex-1 text-right">
+              <p className="truncate text-base font-black text-slate-950">{teamB?.name ?? "TBD"}</p>
+            </div>
+          </div>
+          <p className="mt-2 text-xs text-slate-600">{firstLegLabel}</p>
+        </div>
 
-            <div className="rounded-xl bg-violet-100 px-3 py-2.5">
-              <div className="text-[9px] font-bold uppercase tracking-[0.18em] text-violet-700">
+        <div className="rounded-xl bg-slate-100 p-3">
+          <div className="flex items-center justify-between gap-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
+            <span>Leg 2</span>
+            <span>{isFinal ? "Finaali" : "Toinen osa"}</span>
+          </div>
+          <div className="mt-2 flex items-center justify-between gap-3">
+            <div className="min-w-0 flex-1 text-left">
+              <p className="truncate text-base font-black text-slate-950">{teamB?.name ?? "TBD"}</p>
+            </div>
+            <div className="flex items-center gap-2 rounded-lg bg-white px-2.5 py-1.5 text-lg font-black text-slate-900">
+              <span>{leg2ScoreB ?? "—"}</span>
+              <span className="text-slate-400">:</span>
+              <span>{leg2ScoreA ?? "—"}</span>
+            </div>
+            <div className="min-w-0 flex-1 text-right">
+              <p className="truncate text-base font-black text-slate-950">{teamA?.name ?? "TBD"}</p>
+            </div>
+          </div>
+          <p className="mt-2 text-xs text-slate-600">{secondLegLabel}</p>
+        </div>
+
+        <div className="rounded-xl bg-violet-100 p-3">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-violet-700">
                 Yhteensä
               </div>
-              <div className="mt-1 text-lg font-black text-violet-900">{total ?? "—"}</div>
+              <div className="mt-1 text-lg font-black text-violet-900">
+                {teamA?.name ?? "TBD"} {totalA ?? "—"} - {totalB ?? "—"} {teamB?.name ?? "TBD"}
+              </div>
             </div>
-          </>
-        ) : (
-          <div className="rounded-xl bg-slate-100 px-3 py-2.5">
-            <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
-              {isFinal ? "Tulos" : "Pisteet"}
-            </div>
-            <div className="mt-1 text-2xl font-black text-slate-900">{displayScore ?? "—"}</div>
+            {winner && (
+              <span className="rounded-full bg-violet-600 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.18em] text-white">
+                {winner.name} voitti
+              </span>
+            )}
           </div>
-        )}
+          {!hasTwoLegs && !isFinal && (
+            <p className="mt-2 text-xs text-violet-700">Kahden osaottelun tuloksia ei ole vielä täytetty.</p>
+          )}
+        </div>
       </div>
     </div>
   );
