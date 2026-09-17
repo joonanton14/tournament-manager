@@ -161,9 +161,6 @@ export default async function PublicTournamentPage({
                   <Card key={team.id} className="p-4">
                     <div className="flex items-center justify-between gap-3">
                       <h3 className="text-lg font-black text-slate-950">{team.name}</h3>
-                      <span className="rounded-full bg-violet-100 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-violet-700">
-                        {roster.length} pelaajaa
-                      </span>
                     </div>
 
                     <ul className="mt-3 space-y-2 text-sm text-slate-600">
@@ -229,11 +226,7 @@ export default async function PublicTournamentPage({
                           : "Finaali"}
                       </p>
 
-                      {winnerId && teamA && teamB && (
-                        <span className="rounded-full bg-violet-500/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-violet-100">
-                          {winnerId === teamA.id ? teamA.name : teamB.name} voitti
-                        </span>
-                      )}
+                      
                     </div>
 
                     <div className="p-4">
@@ -377,7 +370,6 @@ function PlayoffMatchCard({
         <div className="rounded-xl bg-slate-100 p-3">
           <div className="flex items-center justify-between gap-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
             <span>Finaali</span>
-            <span>Yksi ottelu</span>
           </div>
 
           <div className="mt-3 flex items-center justify-between gap-3">
@@ -393,8 +385,6 @@ function PlayoffMatchCard({
               <p className="truncate text-base font-black text-slate-950">{teamB?.name ?? "TBD"}</p>
             </div>
           </div>
-
-          <p className="mt-2 text-xs text-slate-600">{firstLegLabel}</p>
         </div>
 
         <div className="mt-3 rounded-xl bg-violet-100 p-3">
@@ -423,7 +413,6 @@ function PlayoffMatchCard({
       <div className="space-y-3">
         <div className="rounded-xl bg-slate-100 p-3">
           <div className="flex items-center justify-between gap-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
-            <span>Leg 1</span>
             <span>Ensimmäinen osa</span>
           </div>
           <div className="mt-2 flex items-center justify-between gap-3">
@@ -439,12 +428,11 @@ function PlayoffMatchCard({
               <p className="truncate text-base font-black text-slate-950">{teamB?.name ?? "TBD"}</p>
             </div>
           </div>
-          <p className="mt-2 text-xs text-slate-600">{firstLegLabel}</p>
+          
         </div>
 
         <div className="rounded-xl bg-slate-100 p-3">
           <div className="flex items-center justify-between gap-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
-            <span>Leg 2</span>
             <span>Toinen osa</span>
           </div>
           <div className="mt-2 flex items-center justify-between gap-3">
@@ -460,14 +448,13 @@ function PlayoffMatchCard({
               <p className="truncate text-base font-black text-slate-950">{teamA?.name ?? "TBD"}</p>
             </div>
           </div>
-          <p className="mt-2 text-xs text-slate-600">{secondLegLabel}</p>
         </div>
 
         <div className="rounded-xl bg-violet-100 p-3">
           <div className="flex items-center justify-between gap-3">
             <div>
               <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-violet-700">
-                Yhteensä
+                Yhteistulos
               </div>
               <div className="mt-1 text-lg font-black text-violet-900">
                 {teamA?.name ?? "TBD"} {totalA ?? "—"} - {totalB ?? "—"} {teamB?.name ?? "TBD"}
