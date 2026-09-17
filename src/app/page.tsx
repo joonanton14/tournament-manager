@@ -270,10 +270,10 @@ export default async function HomePage() {
                     <div className="mt-4 grid grid-cols-3 gap-2 text-center text-[11px] font-semibold text-slate-500">
                       <div className="rounded-xl bg-slate-50 px-2 py-2">
                         <div className="text-lg font-black text-slate-950">{standingsCount}</div>
-                        <div>Sijoitus</div>
+                        <div>Joukkueita</div>
                       </div>
                       <div className="rounded-xl bg-slate-50 px-2 py-2">
-                        <div className="text-lg font-black text-slate-950">{playoffCount}</div>
+                        <div className="text-lg font-black text-slate-950">{championName ? "✓" : "—"}</div>
                         <div>Pudotuspelit</div>
                       </div>
                       <div className="rounded-xl bg-slate-50 px-2 py-2">
