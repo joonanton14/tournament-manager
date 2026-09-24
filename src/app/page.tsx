@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { Card } from "@/components/Card";
+import { LeaderboardCard } from "@/components/LeaderboardCard";
 
 import { getPlayers } from "@/lib/players";
 import { getTournamentPlayoffs } from "@/lib/playoffs";
@@ -431,13 +432,11 @@ async function getOverallPodiums(
   }
 
   return {
-    wins: [...playerStats.values()].sort((a, b) => b.wins - a.wins || a.name.localeCompare(b.name)).slice(0, 3),
+    wins: [...playerStats.values()].sort((a, b) => b.wins - a.wins || a.name.localeCompare(b.name)),
     secondPlaces: [...playerStats.values()]
-      .sort((a, b) => b.secondPlaces - a.secondPlaces || a.name.localeCompare(b.name))
-      .slice(0, 3),
+      .sort((a, b) => b.secondPlaces - a.secondPlaces || a.name.localeCompare(b.name)),
     thirdPlaces: [...playerStats.values()]
-      .sort((a, b) => b.thirdPlaces - a.thirdPlaces || a.name.localeCompare(b.name))
-      .slice(0, 3),
+      .sort((a, b) => b.thirdPlaces - a.thirdPlaces || a.name.localeCompare(b.name)),
   };
 }
 
@@ -588,50 +587,6 @@ function MetricCard({ label, value }: MetricCardProps) {
     <Card className="p-4">
       <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">{label}</p>
       <p className="mt-3 text-2xl font-black tracking-tight text-slate-950">{value}</p>
-    </Card>
-  );
-}
-
-type LeaderboardCardProps = {
-  title: string;
-  icon: string;
-  players: PlayerPerformance[];
-  valueKey: "wins" | "secondPlaces" | "thirdPlaces";
-};
-
-function LeaderboardCard({ title, icon, players, valueKey }: LeaderboardCardProps) {
-  return (
-    <Card className="p-4">
-      <div className="flex items-center gap-2">
-        <span className="text-xl" aria-hidden="true">{icon}</span>
-        <h3 className="text-lg font-black text-slate-950">{title}</h3>
-      </div>
-
-      <div className="mt-4 space-y-3">
-        {players.length ? (
-          players.map((player, index) => (
-            <div
-              key={`${title}-${player.id}`}
-              className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2"
-            >
-              <div className="flex items-center gap-3">
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-violet-100 text-xs font-black text-violet-700">
-                  {index + 1}
-                </span>
-                <span className="text-sm font-semibold text-slate-900">{player.name}</span>
-              </div>
-
-              <span className="text-sm font-black text-slate-950">
-                {player[valueKey]}
-              </span>
-            </div>
-          ))
-        ) : (
-          <p className="rounded-xl bg-slate-50 px-3 py-4 text-sm text-slate-500">
-            No results yet.
-          </p>
-        )}
-      </div>
     </Card>
   );
 }
