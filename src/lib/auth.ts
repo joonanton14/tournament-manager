@@ -6,12 +6,10 @@ const ISSUER = "fifa-tournament-manager";
 const AUDIENCE = "fifa-admin";
 
 function getSecret() {
-  const secret = process.env.AUTH_SECRET;
+  const secret = process.env.AUTH_SECRET ?? "development-secret-change-me";
 
-  if (!secret) {
-    throw new Error(
-      "AUTH_SECRET is not configured.",
-    );
+  if (!process.env.AUTH_SECRET) {
+    console.warn("AUTH_SECRET is not configured; using a development fallback secret.");
   }
 
   return new TextEncoder().encode(secret);

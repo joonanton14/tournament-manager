@@ -1,22 +1,27 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import {
   addTeamToTournament,
   assignPlayersToTournamentTeam,
   createTournament,
+  deleteTournament,
+  getTournamentTeams,
   removeTeamFromTournament,
   updateTournament,
   updateTournamentTeam,
 } from "@/lib/tournaments";
 import { saveTournamentStandings } from "@/lib/standings";
+import { calculateStandingsFromMatches, getTournamentMatchById, getTournamentMatches, saveTournamentMatch, updateTournamentMatch } from "@/lib/matches";
 import { saveFinal, saveSemiFinal } from "@/lib/playoffs";
 
 const tournamentSchema = z.object({
   number: z.coerce.number().int().min(1),
   name: z.string().trim().min(1).max(100),
+  mode: z.enum(["completed", "live"]),
   startDate: z.string().min(1),
   endDate: z.string().min(1),
 }).refine((data) => data.endDate >= data.startDate, {
@@ -52,13 +57,20 @@ export async function addTournamentAction(
   const result = tournamentSchema.safeParse({
     number: formData.get("number"),
     name: formData.get("name"),
+    mode: formData.get("mode"),
     startDate: formData.get("startDate"),
     endDate: formData.get("endDate"),
   });
   if (!result.success) return failure(result.error.issues[0]?.message, "Invalid tournament data.");
 
   try {
-    const tournament = await createTournament(result.data.number, result.data.name, result.data.startDate, result.data.endDate);
+    const tournament = await createTournament(
+      result.data.number,
+      result.data.name,
+      result.data.mode,
+      result.data.startDate,
+      result.data.endDate,
+    );
     revalidatePath("/tournaments");
     return { success: true, tournamentId: tournament.id };
   } catch (error) {
@@ -68,7 +80,9 @@ export async function addTournamentAction(
 
 const updateTournamentSchema = z.object({
   tournamentId: z.string().min(1),
+  number: z.coerce.number().int().min(1),
   name: z.string().trim().min(1).max(100),
+  mode: z.enum(["completed", "live"]),
   startDate: z.string().min(1),
   endDate: z.string().min(1),
 }).refine((data) => data.endDate >= data.startDate, {
@@ -81,7 +95,9 @@ export async function updateTournamentAction(
 ): Promise<void> {
   const result = updateTournamentSchema.safeParse({
     tournamentId: formData.get("tournamentId"),
+    number: formData.get("number"),
     name: formData.get("name"),
+    mode: formData.get("mode"),
     startDate: formData.get("startDate"),
     endDate: formData.get("endDate"),
   });
@@ -89,8 +105,30 @@ export async function updateTournamentAction(
     throw new Error(result.error.issues[0]?.message ?? "Invalid tournament data.");
   }
 
-  await updateTournament(result.data.tournamentId, result.data.name, result.data.startDate, result.data.endDate);
+  await updateTournament(
+    result.data.tournamentId,
+    result.data.number,
+    result.data.name,
+    result.data.mode,
+    result.data.startDate,
+    result.data.endDate,
+  );
   revalidateTournament(result.data.tournamentId);
+}
+
+export async function deleteTournamentAction(
+  formData: FormData,
+): Promise<void> {
+  const tournamentId = formData.get("tournamentId");
+
+  if (typeof tournamentId !== "string" || !tournamentId) {
+    throw new Error("Tournament is required.");
+  }
+
+  await deleteTournament(tournamentId);
+  revalidatePath("/tournaments");
+  revalidatePath("/admin");
+  redirect("/admin");
 }
 
 const tournamentTeamSchema = z.object({
@@ -174,6 +212,115 @@ const standingRowSchema = z.object({
   goalsAgainst: z.coerce.number().int().min(0),
   points: z.coerce.number().int().min(0),
 });
+
+export async function saveTournamentMatchAction(
+  formData: FormData,
+): Promise<ActionResult> {
+  const tournamentId = formData.get("tournamentId");
+  const teamAId = formData.get("teamAId");
+  const teamBId = formData.get("teamBId");
+  const teamAScore = score(formData.get("teamAScore"));
+  const teamBScore = score(formData.get("teamBScore"));
+  const playedAtValue = formData.get("playedAt");
+  const playedAt = typeof playedAtValue === "string" && playedAtValue ? playedAtValue : new Date().toISOString();
+
+  if (
+    typeof tournamentId !== "string" ||
+    typeof teamAId !== "string" ||
+    typeof teamBId !== "string" ||
+    !tournamentId ||
+    !teamAId ||
+    !teamBId ||
+    teamAScore === null ||
+    teamBScore === null
+  ) {
+    return failure("Invalid match data.", "Invalid match data.");
+  }
+
+  try {
+    await saveTournamentMatch(
+      tournamentId,
+      teamAId,
+      teamBId,
+      teamAScore,
+      teamBScore,
+      playedAt,
+    );
+
+    const tournamentTeams = await getTournamentTeams(tournamentId);
+    const matches = await getTournamentMatches(tournamentId);
+    const standings = calculateStandingsFromMatches(
+      tournamentTeams.map((team) => team.id),
+      matches,
+    );
+
+    await saveTournamentStandings(tournamentId, standings);
+    revalidateTournament(tournamentId);
+    revalidatePath("/");
+    revalidatePath(`/public/tournaments/${tournamentId}`);
+    revalidatePath(`/tournaments/${tournamentId}`);
+    revalidatePath(`/tournaments/${tournamentId}/regular-season`);
+    revalidatePath(`/tournaments/${tournamentId}/playoffs`);
+    revalidatePath("/statistics");
+
+    return { success: true };
+  } catch (error) {
+    return failure(error, "Failed to save match.");
+  }
+}
+
+export async function updateTournamentMatchAction(
+  formData: FormData,
+): Promise<ActionResult> {
+  const matchId = formData.get("matchId");
+  const tournamentId = formData.get("tournamentId");
+  const teamAScore = score(formData.get("teamAScore"));
+  const teamBScore = score(formData.get("teamBScore"));
+
+  if (
+    typeof matchId !== "string" ||
+    typeof tournamentId !== "string" ||
+    !matchId ||
+    !tournamentId ||
+    teamAScore === null ||
+    teamBScore === null
+  ) {
+    return failure("Invalid match data.", "Invalid match data.");
+  }
+
+  try {
+    const existingMatch = await getTournamentMatchById(matchId);
+
+    if (!existingMatch) {
+      return failure("Match not found.", "Match not found.");
+    }
+
+    if (existingMatch.tournamentId !== tournamentId) {
+      return failure("Match does not belong to this tournament.", "Invalid match data.");
+    }
+
+    const updatedMatch = await updateTournamentMatch(matchId, teamAScore, teamBScore);
+    const tournamentTeams = await getTournamentTeams(tournamentId);
+    const matches = await getTournamentMatches(tournamentId);
+    const standings = calculateStandingsFromMatches(
+      tournamentTeams.map((team) => team.id),
+      matches,
+    );
+
+    await saveTournamentStandings(tournamentId, standings);
+    revalidateTournament(tournamentId);
+    revalidatePath("/");
+    revalidatePath(`/public/tournaments/${tournamentId}`);
+    revalidatePath(`/tournaments/${tournamentId}`);
+    revalidatePath(`/tournaments/${tournamentId}/regular-season`);
+    revalidatePath(`/tournaments/${tournamentId}/playoffs`);
+    revalidatePath("/statistics");
+
+    return { success: true, tournamentId: updatedMatch.tournamentId };
+  } catch (error) {
+    return failure(error, "Failed to update match.");
+  }
+}
 
 export async function saveTournamentStandingsAction(
   formData: FormData,

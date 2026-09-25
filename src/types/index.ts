@@ -11,10 +11,15 @@ export type Team = {
   createdAt: string;
 };
 
+export type TournamentMode =
+  | "completed"
+  | "live";
+
 export type Tournament = {
   id: string;
   number: number;
   name: string;
+  mode: TournamentMode;
   startDate: string;
   endDate: string;
   createdAt: string;
@@ -39,6 +44,17 @@ export type TournamentStanding = {
   goalsFor: number;
   goalsAgainst: number;
   points: number;
+  createdAt: string;
+};
+
+export type TournamentMatch = {
+  id: string;
+  tournamentId: string;
+  teamAId: string;
+  teamBId: string;
+  teamAScore: number;
+  teamBScore: number;
+  playedAt: string;
   createdAt: string;
 };
 

@@ -2,13 +2,16 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { Card } from "@/components/Card";
-import { TournamentTabs } from "@/components/tournaments/TournamentTabs";
+import { LiveScheduleForm } from "@/components/tournaments/LiveScheduleForm";
+import { RecentResultsList } from "@/components/tournaments/RecentResultsList";
 import { RegularSeasonTable } from "@/components/tournaments/RegularSeasonTable";
+import { TournamentTabs } from "@/components/tournaments/TournamentTabs";
 
 import { isAdminAuthenticated } from "@/lib/auth";
+import { getTournamentMatches } from "@/lib/matches";
+import { getTournamentStandings } from "@/lib/standings";
 import { getTeams } from "@/lib/teams";
 import { getTournamentById, getTournamentTeamDetails } from "@/lib/tournaments";
-import { getTournamentStandings } from "@/lib/standings";
 
 export const dynamic = "force-dynamic";
 
@@ -29,22 +32,23 @@ export default async function RegularSeasonPage({
 
   const { id } = await params;
 
-  const [tournament, teams, standings] =
+  const [tournament, teams, standings, matches] =
     await Promise.all([
       getTournamentById(id),
       getTeams(),
       getTournamentStandings(id),
+      getTournamentMatches(id),
     ]);
 
   if (!tournament) {
     notFound();
   }
 
-  const tournamentTeamDetails =
-    await getTournamentTeamDetails(
-      id,
-      teams,
-    );
+  const tournamentTeamDetails = await getTournamentTeamDetails(id, teams);
+
+  const tournamentTeamLookup = new Map(
+    tournamentTeamDetails.map(({ tournamentTeam, team }) => [tournamentTeam.id, team] as const),
+  );
 
   return (
     <div className="min-h-[calc(100vh-72px)]">
@@ -66,7 +70,7 @@ export default async function RegularSeasonPage({
           </h1>
 
           <p className="mt-3 text-slate-600">
-            Syötä lopullinen sarjataulukko
+            Lisää otteluita, seuraa pelattuja pelejä ja katso sarjataulukko
           </p>
         </div>
 
@@ -75,25 +79,52 @@ export default async function RegularSeasonPage({
           activeTab="regular-season"
         />
 
+        {tournament.mode === "live" && tournamentTeamDetails.length >= 2 && (
+          <section className="mt-8">
+            <Card className="p-6">
+              <div className="mb-5">
+                <h2 className="text-lg font-bold text-slate-950">
+                  Lisää ottelu
+                </h2>
+
+                <p className="mt-1 text-sm text-slate-500">
+                  Lisää yksi ottelu kerrallaan. Sarjataulukko päivittyy automaattisesti jokaisen tuloksen jälkeen.
+                </p>
+              </div>
+
+              <LiveScheduleForm
+                tournamentId={tournament.id}
+                tournamentTeams={tournamentTeamDetails}
+              />
+            </Card>
+
+            {matches.length > 0 && (
+              <div className="mt-6">
+                <RecentResultsList
+                  matches={matches}
+                  teams={teams}
+                  tournamentTeamLookup={tournamentTeamLookup}
+                />
+              </div>
+            )}
+          </section>
+        )}
+
         <section className="mt-8">
           <Card className="p-6">
             <div className="mb-6">
               <h2 className="text-xl font-bold text-slate-950">
-                Lopullinen sarjataulukko
+                Sarjataulukko
               </h2>
 
               <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">
-                Historialliset turnaukset voidaan syöttää
-                manuaalisesti. Ei tarvitse tietää yksittäisiä sarjajoukkueita
-                jos sinulla on vain lopullinen taulukko.
+                Näet aktiivisen tilanteen joukkueiden pistetilanteesta. Voit myös muokata sijoitukset manuaalisesti, jos tarvitaan.
               </p>
             </div>
 
             <RegularSeasonTable
               tournamentId={tournament.id}
-              tournamentTeams={
-                tournamentTeamDetails
-              }
+              tournamentTeams={tournamentTeamDetails}
               standings={standings}
             />
           </Card>

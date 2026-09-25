@@ -65,6 +65,7 @@ export async function getTournamentById(
 export async function createTournament(
   number: number,
   name: string,
+  mode: "completed" | "live",
   startDate: string,
   endDate: string,
 ): Promise<Tournament> {
@@ -100,6 +101,7 @@ export async function createTournament(
     id: crypto.randomUUID(),
     number,
     name: trimmedName,
+    mode,
     startDate,
     endDate,
     createdAt:
@@ -121,7 +123,9 @@ export async function createTournament(
 
 export async function updateTournament(
   tournamentId: string,
+  number: number,
   name: string,
+  mode: "completed" | "live",
   startDate: string,
   endDate: string,
 ): Promise<Tournament> {
@@ -138,6 +142,25 @@ export async function updateTournament(
     );
   }
 
+  if (!Number.isInteger(number) || number < 1) {
+    throw new Error(
+      "Tournament number must be a positive integer.",
+    );
+  }
+
+  const tournaments = await getTournaments();
+  const duplicateNumber = tournaments.find(
+    (tournament) =>
+      tournament.id !== tournamentId &&
+      tournament.number === number,
+  );
+
+  if (duplicateNumber) {
+    throw new Error(
+      "Another tournament already uses that number.",
+    );
+  }
+
   const trimmedName = name.trim();
 
   if (!trimmedName) {
@@ -146,27 +169,11 @@ export async function updateTournament(
     );
   }
 
-  if (!startDate) {
-    throw new Error(
-      "Tournament start date is required.",
-    );
-  }
-
-  if (!endDate) {
-    throw new Error(
-      "Tournament end date is required.",
-    );
-  }
-
-  if (endDate < startDate) {
-    throw new Error(
-      "Tournament end date cannot be before the start date.",
-    );
-  }
-
   const updated: Tournament = {
     ...existing,
+    number,
     name: trimmedName,
+    mode,
     startDate,
     endDate,
   };
@@ -177,6 +184,75 @@ export async function updateTournament(
   );
 
   return updated;
+}
+
+export async function deleteTournament(
+  tournamentId: string,
+): Promise<void> {
+  await requireAdmin();
+
+  const existing =
+    await redis.get<Tournament>(
+      tournamentKey(tournamentId),
+    );
+
+  if (!existing) {
+    throw new Error(
+      "Tournament not found.",
+    );
+  }
+
+  const [tournamentTeams, standingsIds, matchesIds, playoffIds] = await Promise.all([
+    getTournamentTeams(tournamentId),
+    redis.smembers(`tournamentStandings:${tournamentId}`),
+    redis.smembers(`tournamentMatches:${tournamentId}`),
+    redis.smembers(`playoffs:${tournamentId}`),
+  ]);
+
+  for (const tournamentTeam of tournamentTeams) {
+    await redis.del(
+      tournamentTeamKey(
+        tournamentTeam.id,
+      ),
+    );
+  }
+
+  for (const standingId of standingsIds) {
+    await redis.del(`tournamentStanding:${standingId}`);
+  }
+
+  for (const matchId of matchesIds) {
+    await redis.del(`tournamentMatch:${matchId}`);
+  }
+
+  for (const playoffId of playoffIds) {
+    await redis.del(`playoff:${playoffId}`);
+  }
+
+  await redis.del(
+    tournamentKey(tournamentId),
+  );
+
+  await redis.del(
+    tournamentTeamsKey(tournamentId),
+  );
+
+  await redis.del(
+    `tournamentStandings:${tournamentId}`,
+  );
+
+  await redis.del(
+    `tournamentMatches:${tournamentId}`,
+  );
+
+  await redis.del(
+    `playoffs:${tournamentId}`,
+  );
+
+  await redis.srem(
+    TOURNAMENTS_KEY,
+    tournamentId,
+  );
 }
 
 export async function getTournamentTeams(

@@ -95,9 +95,6 @@ export function LeaderboardCard({
                   {icon}
                 </span>
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-violet-300">
-                    Koko lista
-                  </p>
                   <h3 className="text-lg font-black">{title}</h3>
                 </div>
               </div>

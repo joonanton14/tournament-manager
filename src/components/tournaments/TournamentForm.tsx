@@ -11,6 +11,7 @@ export function TournamentForm() {
 
   const [number, setNumber] = useState("");
   const [name, setName] = useState("");
+  const [mode, setMode] = useState<"completed" | "live">("completed");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [error, setError] = useState("");
@@ -25,6 +26,7 @@ export function TournamentForm() {
 
     formData.set("number", number);
     formData.set("name", name);
+    formData.set("mode", mode);
     formData.set("startDate", startDate);
     formData.set("endDate", endDate);
 
@@ -91,6 +93,30 @@ export function TournamentForm() {
           required
           className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10"
         />
+      </div>
+
+      <div>
+        <label className="mb-2 block text-sm font-semibold text-slate-700">
+          Turnauksen tyyppi
+        </label>
+
+        <div className="grid grid-cols-2 gap-2 rounded-xl border border-slate-200 bg-slate-50 p-1">
+          {(["completed", "live"] as const).map((value) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setMode(value)}
+              className={[
+                "rounded-lg px-3 py-2 text-sm font-semibold transition",
+                mode === value
+                  ? "bg-violet-600 text-white shadow-sm"
+                  : "text-slate-600 hover:bg-white",
+              ].join(" ")}
+            >
+              {value === "completed" ? "Pelattu" : "Live"}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div>
