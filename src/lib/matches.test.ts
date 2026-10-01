@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import { redis } from "./redis";
-import { MAX_MATCHES_PER_PAIR, getFixtureMatchCount, updateTournamentMatch } from "./matches";
+import { MAX_MATCHES_PER_PAIR, deleteTournamentMatch, getFixtureMatchCount, updateTournamentMatch } from "./matches";
 
 describe("repeated team fixtures", () => {
   it("counts the same matchup in either order", () => {
@@ -44,5 +44,25 @@ describe("repeated team fixtures", () => {
     assert.equal(match.teamBId, "team-2");
     assert.equal(match.teamAScore, 2);
     assert.equal(match.teamBScore, 1);
+  });
+
+  it("deletes a saved match from its tournament", async () => {
+    await redis.set("tournamentMatch:match-delete", {
+      id: "match-delete",
+      tournamentId: "tournament-delete",
+      teamAId: "team-1",
+      teamBId: "team-2",
+      teamAScore: 1,
+      teamBScore: 0,
+      playedAt: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+    });
+    await redis.sadd("tournamentMatches:tournament-delete", "match-delete");
+
+    const deleted = await deleteTournamentMatch("match-delete", "tournament-delete");
+
+    assert.equal(deleted?.id, "match-delete");
+    assert.equal(await redis.get("tournamentMatch:match-delete"), null);
+    assert.deepEqual(await redis.smembers("tournamentMatches:tournament-delete"), []);
   });
 });

@@ -70,11 +70,38 @@ export async function saveSemiFinal(
   const existingPlayoffs =
     await getTournamentPlayoffs(tournamentId);
 
-  const existing = existingPlayoffs.find(
+  const semiFinals = existingPlayoffs.filter(
     (playoff) =>
-      playoff.stage === "semi_final" &&
-      playoff.number === number,
+      playoff.stage === "semi_final",
   );
+  const existingByTeams = semiFinals.find(
+    (playoff) =>
+      (playoff.teamAId === teamAId && playoff.teamBId === teamBId) ||
+      (playoff.teamAId === teamBId && playoff.teamBId === teamAId),
+  );
+  const existingAtNumber = semiFinals.find(
+    (playoff) => playoff.number === number,
+  );
+  const otherNumber = number === 1 ? 2 : 1;
+  const existingAtOtherNumber = semiFinals.find(
+    (playoff) => playoff.number === otherNumber,
+  );
+
+  let existing = existingByTeams;
+
+  if (existingByTeams && existingAtNumber && existingAtNumber.id !== existingByTeams.id) {
+    await redis.set(playoffKey(existingAtNumber.id), {
+      ...existingAtNumber,
+      number: existingByTeams.number,
+    });
+  } else if (!existingByTeams && existingAtNumber && !existingAtOtherNumber) {
+    await redis.set(playoffKey(existingAtNumber.id), {
+      ...existingAtNumber,
+      number: otherNumber,
+    });
+  } else if (!existingByTeams) {
+    existing = existingAtNumber;
+  }
 
   const playoff: PlayoffTie = {
     id: existing?.id ?? crypto.randomUUID(),

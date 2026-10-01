@@ -6,9 +6,6 @@ import { Card } from "@/components/Card";
 
 import { AddTeamForm } from "@/components/tournaments/AddTeamForm";
 
-import { LiveScheduleForm } from "@/components/tournaments/LiveScheduleForm";
-import { MatchScheduleBoard } from "@/components/tournaments/MatchScheduleBoard";
-
 import { PlayerAssignmentForm } from "@/components/tournaments/PlayerAssignmentForm";
 
 import { TournamentTeamActions } from "@/components/tournaments/TournamentTeamActions";
@@ -28,7 +25,6 @@ import {
   getTournamentById,
   getTournamentTeamDetails,
 } from "@/lib/tournaments";
-import { generateRoundRobinSchedule, getTournamentMatches } from "@/lib/matches";
 
 export const dynamic = "force-dynamic";
 
@@ -141,12 +137,10 @@ export default async function TournamentPage({
     tournament,
     players,
     teams,
-    matches,
   ] = await Promise.all([
     getTournamentById(id),
     getPlayers(),
     getTeams(),
-    getTournamentMatches(id),
   ]);
 
   if (!tournament) {
@@ -158,23 +152,6 @@ export default async function TournamentPage({
       id,
       teams,
     );
-
-  const tournamentTeamLookup = new Map(
-    tournamentTeamDetails.map(
-      ({ tournamentTeam, team }) =>
-        [tournamentTeam.id, team] as const,
-    ),
-  );
-
-  const liveSchedule =
-    tournament.mode === "live"
-      ? generateRoundRobinSchedule(
-          tournamentTeamDetails.map(
-            ({ tournamentTeam }) =>
-              tournamentTeam.id,
-          ),
-        )
-      : [];
 
   const existingTeamIds =
     tournamentTeamDetails.map(

@@ -9,6 +9,7 @@ import { TournamentTabs } from "@/components/tournaments/TournamentTabs";
 
 import { isAdminAuthenticated } from "@/lib/auth";
 import { getTournamentMatches } from "@/lib/matches";
+import { getPlayers } from "@/lib/players";
 import { getTournamentStandings } from "@/lib/standings";
 import { getTeams } from "@/lib/teams";
 import { getTournamentById, getTournamentTeamDetails } from "@/lib/tournaments";
@@ -32,10 +33,11 @@ export default async function RegularSeasonPage({
 
   const { id } = await params;
 
-  const [tournament, teams, standings, matches] =
+  const [tournament, teams, players, standings, matches] =
     await Promise.all([
       getTournamentById(id),
       getTeams(),
+      getPlayers(),
       getTournamentStandings(id),
       getTournamentMatches(id),
     ]);
@@ -48,6 +50,18 @@ export default async function RegularSeasonPage({
 
   const tournamentTeamLookup = new Map(
     tournamentTeamDetails.map(({ tournamentTeam, team }) => [tournamentTeam.id, team] as const),
+  );
+  const playerLookup = new Map(players.map((player) => [player.id, player] as const));
+  const teamPlayerNames = Object.fromEntries(
+    tournamentTeamDetails.map(({ tournamentTeam }) => [
+      tournamentTeam.id,
+      tournamentTeam.playerIds.flatMap((playerId) => {
+        const player = playerLookup.get(playerId);
+        return player
+          ? [player.nickname || player.name]
+          : [];
+      }),
+    ]),
   );
 
   return (
@@ -104,6 +118,7 @@ export default async function RegularSeasonPage({
                   matches={matches}
                   teams={teams}
                   tournamentTeamLookup={tournamentTeamLookup}
+                  teamPlayerNames={teamPlayerNames}
                 />
               </div>
             )}
@@ -116,16 +131,14 @@ export default async function RegularSeasonPage({
               <h2 className="text-xl font-bold text-slate-950">
                 Sarjataulukko
               </h2>
-
-              <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">
-                Näet aktiivisen tilanteen joukkueiden pistetilanteesta. Voit myös muokata sijoitukset manuaalisesti, jos tarvitaan.
-              </p>
             </div>
 
             <RegularSeasonTable
               tournamentId={tournament.id}
+              isLiveTournament={tournament.mode === "live"}
               tournamentTeams={tournamentTeamDetails}
               standings={standings}
+              teamPlayerNames={teamPlayerNames}
             />
           </Card>
         </section>

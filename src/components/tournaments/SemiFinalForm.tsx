@@ -348,13 +348,7 @@ export function SemiFinalForm({
         </div>
       </div>
 
-      {lockedTeams && (
-        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-          Nämä joukkueet on määrätty automaattisesti
-          sääntöjen mukaan.
-        </div>
-      )}
-
+     
       <div className="grid gap-4 sm:grid-cols-2">
         <ScoreBox
           title="Game 1"

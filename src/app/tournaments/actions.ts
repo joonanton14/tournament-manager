@@ -15,7 +15,7 @@ import {
   updateTournamentTeam,
 } from "@/lib/tournaments";
 import { saveTournamentStandings } from "@/lib/standings";
-import { calculateStandingsFromMatches, getTournamentMatchById, getTournamentMatches, saveTournamentMatch, updateTournamentMatch } from "@/lib/matches";
+import { calculateStandingsFromMatches, deleteTournamentMatch, getTournamentMatchById, getTournamentMatches, saveTournamentMatch, updateTournamentMatch } from "@/lib/matches";
 import { saveFinal, saveSemiFinal } from "@/lib/playoffs";
 
 const tournamentSchema = z.object({
@@ -319,6 +319,50 @@ export async function updateTournamentMatchAction(
     return { success: true, tournamentId: updatedMatch.tournamentId };
   } catch (error) {
     return failure(error, "Failed to update match.");
+  }
+}
+
+export async function deleteTournamentMatchAction(
+  formData: FormData,
+): Promise<ActionResult> {
+  const matchId = formData.get("matchId");
+  const tournamentId = formData.get("tournamentId");
+
+  if (
+    typeof matchId !== "string" ||
+    typeof tournamentId !== "string" ||
+    !matchId ||
+    !tournamentId
+  ) {
+    return failure("Invalid match data.", "Invalid match data.");
+  }
+
+  try {
+    const deletedMatch = await deleteTournamentMatch(matchId, tournamentId);
+
+    if (!deletedMatch) {
+      return failure("Match not found.", "Match not found.");
+    }
+
+    const tournamentTeams = await getTournamentTeams(tournamentId);
+    const matches = await getTournamentMatches(tournamentId);
+    const standings = calculateStandingsFromMatches(
+      tournamentTeams.map((team) => team.id),
+      matches,
+    );
+
+    await saveTournamentStandings(tournamentId, standings);
+    revalidateTournament(tournamentId);
+    revalidatePath("/");
+    revalidatePath(`/public/tournaments/${tournamentId}`);
+    revalidatePath(`/tournaments/${tournamentId}`);
+    revalidatePath(`/tournaments/${tournamentId}/regular-season`);
+    revalidatePath(`/tournaments/${tournamentId}/playoffs`);
+    revalidatePath("/statistics");
+
+    return { success: true, tournamentId };
+  } catch (error) {
+    return failure(error, "Failed to delete match.");
   }
 }
 

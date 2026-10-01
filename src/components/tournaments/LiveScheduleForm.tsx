@@ -17,18 +17,30 @@ type LiveScheduleFormProps = {
   tournamentTeams: TournamentTeamDetail[];
 };
 
+const scoreOptions = Array.from({ length: 11 }, (_, score) => score);
+const customScoreValue = "custom";
+
 export function LiveScheduleForm({
   tournamentId,
   tournamentTeams,
 }: LiveScheduleFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [teamAId, setTeamAId] = useState(tournamentTeams[0]?.tournamentTeam.id ?? "");
-  const [teamBId, setTeamBId] = useState(
-    tournamentTeams[1]?.tournamentTeam.id ?? tournamentTeams[0]?.tournamentTeam.id ?? "",
+  const sortedTournamentTeams = [...tournamentTeams].sort(
+    (teamA, teamB) =>
+      teamA.team.name.localeCompare(teamB.team.name, "fi") ||
+      teamA.tournamentTeam.id.localeCompare(teamB.tournamentTeam.id),
   );
+  const initialTeamAId = sortedTournamentTeams[0]?.tournamentTeam.id ?? "";
+  const initialTeamBId = sortedTournamentTeams.find(
+    ({ tournamentTeam }) => tournamentTeam.id !== initialTeamAId,
+  )?.tournamentTeam.id ?? "";
+  const [teamAId, setTeamAId] = useState(initialTeamAId);
+  const [teamBId, setTeamBId] = useState(initialTeamBId);
   const [teamAScore, setTeamAScore] = useState("");
   const [teamBScore, setTeamBScore] = useState("");
+  const [teamACustomScore, setTeamACustomScore] = useState("");
+  const [teamBCustomScore, setTeamBCustomScore] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -46,8 +58,8 @@ export function LiveScheduleForm({
     formData.set("tournamentId", tournamentId);
     formData.set("teamAId", teamAId);
     formData.set("teamBId", teamBId);
-    formData.set("teamAScore", teamAScore);
-    formData.set("teamBScore", teamBScore);
+    formData.set("teamAScore", teamAScore === customScoreValue ? teamACustomScore : teamAScore);
+    formData.set("teamBScore", teamBScore === customScoreValue ? teamBCustomScore : teamBScore);
     formData.set("playedAt", new Date().toISOString());
 
     startTransition(async () => {
@@ -59,12 +71,12 @@ export function LiveScheduleForm({
       }
 
       setSuccess("Ottelu tallennettu.");
-      setTeamAId(tournamentTeams[0]?.tournamentTeam.id ?? "");
-      setTeamBId(
-        tournamentTeams[1]?.tournamentTeam.id ?? tournamentTeams[0]?.tournamentTeam.id ?? "",
-      );
+      setTeamAId(initialTeamAId);
+      setTeamBId(initialTeamBId);
       setTeamAScore("");
       setTeamBScore("");
+      setTeamACustomScore("");
+      setTeamBCustomScore("");
       router.refresh();
     });
   }
@@ -76,10 +88,21 @@ export function LiveScheduleForm({
           <label className="mb-2 block text-sm font-semibold text-slate-700">Kotijoukkue</label>
           <select
             value={teamAId}
-            onChange={(event) => setTeamAId(event.target.value)}
+            onChange={(event) => {
+              const nextTeamAId = event.target.value;
+              setTeamAId(nextTeamAId);
+
+              if (nextTeamAId === teamBId) {
+                setTeamBId(
+                  sortedTournamentTeams.find(
+                    ({ tournamentTeam }) => tournamentTeam.id !== nextTeamAId,
+                  )?.tournamentTeam.id ?? "",
+                );
+              }
+            }}
             className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10"
           >
-            {tournamentTeams.map(({ team, tournamentTeam }) => (
+            {sortedTournamentTeams.map(({ team, tournamentTeam }) => (
               <option key={tournamentTeam.id} value={tournamentTeam.id}>{team.name}</option>
             ))}
           </select>
@@ -92,7 +115,7 @@ export function LiveScheduleForm({
             onChange={(event) => setTeamBId(event.target.value)}
             className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10"
           >
-            {tournamentTeams
+            {sortedTournamentTeams
               .filter(({ tournamentTeam }) => tournamentTeam.id !== teamAId)
               .map(({ team, tournamentTeam }) => (
                 <option key={tournamentTeam.id} value={tournamentTeam.id}>{team.name}</option>
@@ -103,25 +126,63 @@ export function LiveScheduleForm({
 
       <div className="grid gap-4 md:grid-cols-2">
         <div>
-          <label className="mb-2 block text-sm font-semibold text-slate-700">Kotijoukkueen maali</label>
-          <input
-            type="number"
-            min="0"
+          <label className="mb-2 block text-sm font-semibold text-slate-700">
+            {tournamentTeams.find(({ tournamentTeam }) => tournamentTeam.id === teamAId)?.team.name ?? "Kotijoukkueen maalit"}
+          </label>
+          <select
             value={teamAScore}
             onChange={(event) => setTeamAScore(event.target.value)}
-            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-violet-500 focus:ring-violet-500/10"
-          />
+            required
+            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10"
+          >
+            <option value="">Valitse maalit</option>
+            {scoreOptions.map((score) => (
+              <option key={score} value={score}>{score}</option>
+            ))}
+            <option value={customScoreValue}>Yli 10</option>
+          </select>
+          {teamAScore === customScoreValue && (
+            <input
+              type="number"
+              min="11"
+              step="1"
+              value={teamACustomScore}
+              onChange={(event) => setTeamACustomScore(event.target.value)}
+              placeholder="Syötä maalien määrä"
+              required
+              className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10"
+            />
+          )}
         </div>
 
         <div>
-          <label className="mb-2 block text-sm font-semibold text-slate-700">Vierasjoukkueen maali</label>
-          <input
-            type="number"
-            min="0"
+          <label className="mb-2 block text-sm font-semibold text-slate-700">
+            {tournamentTeams.find(({ tournamentTeam }) => tournamentTeam.id === teamBId)?.team.name ?? "Vierasjoukkueen maalit"}
+          </label>
+          <select
             value={teamBScore}
             onChange={(event) => setTeamBScore(event.target.value)}
-            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-violet-500 focus:ring-violet-500/10"
-          />
+            required
+            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10"
+          >
+            <option value="">Valitse maalit</option>
+            {scoreOptions.map((score) => (
+              <option key={score} value={score}>{score}</option>
+            ))}
+            <option value={customScoreValue}>Yli 10</option>
+          </select>
+          {teamBScore === customScoreValue && (
+            <input
+              type="number"
+              min="11"
+              step="1"
+              value={teamBCustomScore}
+              onChange={(event) => setTeamBCustomScore(event.target.value)}
+              placeholder="Syötä maalien määrä"
+              required
+              className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10"
+            />
+          )}
         </div>
       </div>
 

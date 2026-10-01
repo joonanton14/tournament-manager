@@ -144,6 +144,9 @@ export default async function PlayoffsPage({
   const isFourTeamFormat =
     teamCount === 4;
 
+  const isTopFourPlayoffFormat =
+    teamCount >= 4;
+
   const isFivePlusTeamFormat =
     teamCount >= 5;
 
@@ -171,26 +174,6 @@ export default async function PlayoffsPage({
         item.standing?.position === 4,
     );
 
-  const fifthPlace =
-    teamsWithStandings.find(
-      (item) =>
-        item.standing?.position === 5,
-    );
-
-  const semiFinal1 =
-    playoffs.find(
-      (playoff) =>
-        playoff.stage === "semi_final" &&
-        playoff.number === 1,
-    );
-
-  const semiFinal2 =
-    playoffs.find(
-      (playoff) =>
-        playoff.stage === "semi_final" &&
-        playoff.number === 2,
-    );
-
   const final =
     playoffs.find(
       (playoff) =>
@@ -198,86 +181,51 @@ export default async function PlayoffsPage({
     );
 
   /*
-   * For four teams:
-   *
-   * 1st -> final
-   * 2nd vs 3rd -> semifinal
-   * 4th -> eliminated
-   */
-
-  const fourTeamSemiFinal =
-    semiFinal1 &&
-    secondPlace &&
-    thirdPlace &&
-    (
-      (
-        semiFinal1.teamAId ===
-          secondPlace.team.id &&
-        semiFinal1.teamBId ===
-          thirdPlace.team.id
-      ) ||
-      (
-        semiFinal1.teamAId ===
-          thirdPlace.team.id &&
-        semiFinal1.teamBId ===
-          secondPlace.team.id
-      )
-    )
-      ? semiFinal1
-      : undefined;
-
-  /*
-   * For five teams:
+   * For four or more teams:
    *
    * 1st vs 4th -> semifinal 1
    * 2nd vs 3rd -> semifinal 2
-   * 5th -> eliminated
+   * 5th and lower -> eliminated
    */
 
-  const fiveTeamSemiFinal1 =
-    isFivePlusTeamFormat &&
+  const topFourSemiFinal1 =
+    isTopFourPlayoffFormat &&
     firstPlace &&
     fourthPlace
-      ? semiFinal1 &&
-        (
-          (
-            semiFinal1.teamAId ===
-              firstPlace.team.id &&
-            semiFinal1.teamBId ===
-              fourthPlace.team.id
-          ) ||
-          (
-            semiFinal1.teamAId ===
-              fourthPlace.team.id &&
-            semiFinal1.teamBId ===
-              firstPlace.team.id
-          )
+      ? playoffs.find(
+          (playoff) =>
+            playoff.stage === "semi_final" &&
+            (
+              (
+                playoff.teamAId === firstPlace.team.id &&
+                playoff.teamBId === fourthPlace.team.id
+              ) ||
+              (
+                playoff.teamAId === fourthPlace.team.id &&
+                playoff.teamBId === firstPlace.team.id
+              )
+            ),
         )
-        ? semiFinal1
-        : undefined
       : undefined;
 
-  const fiveTeamSemiFinal2 =
-    isFivePlusTeamFormat &&
+  const topFourSemiFinal2 =
+    isTopFourPlayoffFormat &&
     secondPlace &&
     thirdPlace
-      ? semiFinal2 &&
-        (
-          (
-            semiFinal2.teamAId ===
-              secondPlace.team.id &&
-            semiFinal2.teamBId ===
-              thirdPlace.team.id
-          ) ||
-          (
-            semiFinal2.teamAId ===
-              thirdPlace.team.id &&
-            semiFinal2.teamBId ===
-              secondPlace.team.id
-          )
+      ? playoffs.find(
+          (playoff) =>
+            playoff.stage === "semi_final" &&
+            (
+              (
+                playoff.teamAId === secondPlace.team.id &&
+                playoff.teamBId === thirdPlace.team.id
+              ) ||
+              (
+                playoff.teamAId === thirdPlace.team.id &&
+                playoff.teamBId === secondPlace.team.id
+              )
+            ),
         )
-        ? semiFinal2
-        : undefined
       : undefined;
 
   const allTeams =
@@ -289,45 +237,31 @@ export default async function PlayoffsPage({
    * Calculate semifinal winners.
    */
 
-  const fourTeamSemiFinalWinnerId =
+  const topFourSemiFinal1WinnerId =
     getSemiFinalWinnerTeamId(
-      fourTeamSemiFinal,
+      topFourSemiFinal1,
     );
 
-  const fiveTeamSemiFinal1WinnerId =
+  const topFourSemiFinal2WinnerId =
     getSemiFinalWinnerTeamId(
-      fiveTeamSemiFinal1,
+      topFourSemiFinal2,
     );
 
-  const fiveTeamSemiFinal2WinnerId =
-    getSemiFinalWinnerTeamId(
-      fiveTeamSemiFinal2,
-    );
-
-  const fourTeamSemiFinalWinner =
-    fourTeamSemiFinalWinnerId
+  const topFourSemiFinal1Winner =
+    topFourSemiFinal1WinnerId
       ? allTeams.find(
           (team) =>
             team.id ===
-            fourTeamSemiFinalWinnerId,
+            topFourSemiFinal1WinnerId,
         )
       : undefined;
 
-  const fiveTeamSemiFinal1Winner =
-    fiveTeamSemiFinal1WinnerId
+  const topFourSemiFinal2Winner =
+    topFourSemiFinal2WinnerId
       ? allTeams.find(
           (team) =>
             team.id ===
-            fiveTeamSemiFinal1WinnerId,
-        )
-      : undefined;
-
-  const fiveTeamSemiFinal2Winner =
-    fiveTeamSemiFinal2WinnerId
-      ? allTeams.find(
-          (team) =>
-            team.id ===
-            fiveTeamSemiFinal2WinnerId,
+            topFourSemiFinal2WinnerId,
         )
       : undefined;
 
@@ -342,14 +276,9 @@ export default async function PlayoffsPage({
     | (typeof allTeams)[number]
     | undefined;
 
-  if (isFourTeamFormat) {
-    finalTeamB =
-      fourTeamSemiFinalWinner;
-  }
-
-  if (isFivePlusTeamFormat) {
+  if (isTopFourPlayoffFormat) {
     /*
-     * Five-team format:
+    * Five-or-more-team format:
      *
      * semifinal 1 = 1st vs 4th
      * semifinal 2 = 2nd vs 3rd
@@ -359,11 +288,26 @@ export default async function PlayoffsPage({
      */
 
     finalTeamA =
-      fiveTeamSemiFinal1Winner;
+      topFourSemiFinal1Winner;
 
     finalTeamB =
-      fiveTeamSemiFinal2Winner;
+      topFourSemiFinal2Winner;
   }
+
+  const finalForCurrentTeams =
+    final && finalTeamA && finalTeamB
+      ? final.teamAId === finalTeamA.id && final.teamBId === finalTeamB.id
+        ? final
+        : final.teamAId === finalTeamB.id && final.teamBId === finalTeamA.id
+          ? {
+              ...final,
+              teamAId: finalTeamA.id,
+              teamBId: finalTeamB.id,
+              leg1TeamAScore: final.leg1TeamBScore,
+              leg1TeamBScore: final.leg1TeamAScore,
+            }
+          : undefined
+      : undefined;
 
   /*
    * Calculate final winner.
@@ -376,22 +320,22 @@ export default async function PlayoffsPage({
   let finalTie = false;
 
   if (
-    final &&
+    finalForCurrentTeams &&
     finalTeamA &&
     finalTeamB &&
-    final.leg1TeamAScore !== null &&
-    final.leg1TeamAScore !== undefined &&
-    final.leg1TeamBScore !== null &&
-    final.leg1TeamBScore !== undefined
+    finalForCurrentTeams.leg1TeamAScore !== null &&
+    finalForCurrentTeams.leg1TeamAScore !== undefined &&
+    finalForCurrentTeams.leg1TeamBScore !== null &&
+    finalForCurrentTeams.leg1TeamBScore !== undefined
   ) {
     if (
-      final.leg1TeamAScore >
-      final.leg1TeamBScore
+      finalForCurrentTeams.leg1TeamAScore >
+      finalForCurrentTeams.leg1TeamBScore
     ) {
       finalWinner = finalTeamA;
     } else if (
-      final.leg1TeamBScore >
-      final.leg1TeamAScore
+      finalForCurrentTeams.leg1TeamBScore >
+      finalForCurrentTeams.leg1TeamAScore
     ) {
       finalWinner = finalTeamB;
     } else {
@@ -403,9 +347,9 @@ export default async function PlayoffsPage({
     isFourTeamFormat &&
     teamsWithStandings.length === 4;
 
-  const fiveTeamStandingsReady =
+  const fivePlusTeamStandingsReady =
     isFivePlusTeamFormat &&
-    teamsWithStandings.length >= 5;
+    teamsWithStandings.length === teamCount;
 
   return (
     <div className="min-h-[calc(100vh-72px)]">
@@ -487,113 +431,9 @@ export default async function PlayoffsPage({
                   <QualificationCard
                     position="1."
                     teamName={
-                      firstPlace?.team.name ??
-                      "Odottaa"
-                    }
-                    description="Suoraan finaaliin"
-                    highlight
-                  />
-
-                  <QualificationCard
-                    position="2."
-                    teamName={
-                      secondPlace?.team.name ??
-                      "Odottaa"
-                    }
-                    description="Välierä"
-                  />
-
-                  <QualificationCard
-                    position="3."
-                    teamName={
-                      thirdPlace?.team.name ??
-                      "Odottaa"
-                    }
-                    description="Välierä"
-                  />
-
-                  <QualificationCard
-                    position="4."
-                    teamName={
-                      fourthPlace?.team.name ??
-                      "Odottaa"
-                    }
-                    description="Putoaa"
-                    muted
-                  />
-                </div>
-              </Card>
-            </section>
-
-            <section className="mt-8">
-              <Card className="overflow-hidden">
-                <div className="border-b border-slate-200 bg-violet-50 p-6">
-                  <p className="text-sm font-bold uppercase tracking-wide text-violet-600">
-                    Välierä
-                  </p>
-
-                  <h2 className="mt-1 text-xl font-bold text-slate-950">
-                    2. sijoittunut vs 3. sijoittunut
-                  </h2>
-                </div>
-
-                <div className="p-6">
-                  {secondPlace &&
-                  thirdPlace ? (
-                    <SemiFinalForm
-                      tournamentId={tournament.id}
-                      number={1}
-                      teams={allTeams}
-                      existing={
-                        fourTeamSemiFinal
-                      }
-                      initialTeamAId={
-                        secondPlace.team.id
-                      }
-                      initialTeamBId={
-                        thirdPlace.team.id
-                      }
-                      lockedTeams
-                    />
-                  ) : null}
-                </div>
-              </Card>
-            </section>
-
-            <FinalSection
-              tournamentId={tournament.id}
-              final={final}
-              teamA={finalTeamA}
-              teamB={finalTeamB}
-              finalWinner={finalWinner}
-              finalTie={finalTie}
-              title="Finaali"
-            />
-          </>
-        ) : isFivePlusTeamFormat ? (
-          <>
-            <section className="mt-8">
-              <Card className="overflow-hidden">
-                <div className="border-b border-slate-200 bg-slate-950 p-6 text-white">
-                  <p className="text-sm font-bold uppercase tracking-wide text-violet-400">
-                    Viiden joukkueen formaatti
-                  </p>
-
-                  <h2 className="mt-1 text-2xl font-bold">
-                    Pudotuspelipaikat
-                  </h2>
-
-                  <p className="mt-2 text-sm text-slate-400">
-                    Runkosarjan sijoitus määrittää välieräparit.
-                  </p>
-                </div>
-
-                <div className="grid gap-4 p-6 sm:grid-cols-2">
-                  <QualificationCard
-                    position="1."
-                    teamName={
-                      firstPlace?.team.name ??
-                      "Odottaa"
+                      fourTeamStandingsReady
+                        ? firstPlace?.team.name ?? "Odottaa"
+                        : "Odottaa"
                     }
                     description="Välierä 1"
                     highlight
@@ -602,8 +442,9 @@ export default async function PlayoffsPage({
                   <QualificationCard
                     position="4."
                     teamName={
-                      fourthPlace?.team.name ??
-                      "Odottaa"
+                      fourTeamStandingsReady
+                        ? fourthPlace?.team.name ?? "Odottaa"
+                        : "Odottaa"
                     }
                     description="Välierä 1"
                   />
@@ -611,8 +452,9 @@ export default async function PlayoffsPage({
                   <QualificationCard
                     position="2."
                     teamName={
-                      secondPlace?.team.name ??
-                      "Odottaa"
+                      fourTeamStandingsReady
+                        ? secondPlace?.team.name ?? "Odottaa"
+                        : "Odottaa"
                     }
                     description="Välierä 2"
                   />
@@ -620,20 +462,11 @@ export default async function PlayoffsPage({
                   <QualificationCard
                     position="3."
                     teamName={
-                      thirdPlace?.team.name ??
-                      "Odottaa"
+                      fourTeamStandingsReady
+                        ? thirdPlace?.team.name ?? "Odottaa"
+                        : "Odottaa"
                     }
                     description="Välierä 2"
-                  />
-
-                  <QualificationCard
-                    position="5."
-                    teamName={
-                      fifthPlace?.team.name ??
-                      "Odottaa"
-                    }
-                    description="Putoaa"
-                    muted
                   />
                 </div>
               </Card>
@@ -652,14 +485,15 @@ export default async function PlayoffsPage({
                 </div>
 
                 <div className="p-6">
-                  {firstPlace &&
+                  {fourTeamStandingsReady &&
+                  firstPlace &&
                   fourthPlace ? (
                     <SemiFinalForm
                       tournamentId={tournament.id}
                       number={1}
                       teams={allTeams}
                       existing={
-                        fiveTeamSemiFinal1
+                        topFourSemiFinal1
                       }
                       initialTeamAId={
                         firstPlace.team.id
@@ -687,14 +521,187 @@ export default async function PlayoffsPage({
                 </div>
 
                 <div className="p-6">
-                  {secondPlace &&
+                  {fourTeamStandingsReady &&
+                  secondPlace &&
+                  thirdPlace ? (
+                    <SemiFinalForm
+                      tournamentId={tournament.id}
+                      number={2}
+                      teams={allTeams}
+                      existing={topFourSemiFinal2}
+                      initialTeamAId={secondPlace.team.id}
+                      initialTeamBId={thirdPlace.team.id}
+                      lockedTeams
+                    />
+                  ) : null}
+                </div>
+              </Card>
+            </section>
+
+            <FinalSection
+              tournamentId={tournament.id}
+              final={finalForCurrentTeams}
+              teamA={fourTeamStandingsReady ? finalTeamA : undefined}
+              teamB={fourTeamStandingsReady ? finalTeamB : undefined}
+              finalWinner={finalWinner}
+              finalTie={finalTie}
+              title="Finaali"
+            />
+          </>
+        ) : isFivePlusTeamFormat ? (
+          <>
+            {!fivePlusTeamStandingsReady && (
+              <Card className="mt-8 border-amber-200 bg-amber-50 p-6">
+                <p className="font-semibold text-amber-900">
+                  Tallenna kaikkien {teamCount} joukkueen sijoitukset ennen pudotuspelien kirjaamista.
+                </p>
+
+                <Link
+                  href={`/tournaments/${tournament.id}/regular-season`}
+                  className="mt-4 inline-flex rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white"
+                >
+                  Muokkaa sarjataulukkoa
+                </Link>
+              </Card>
+            )}
+
+            <section className="mt-8">
+              <Card className="overflow-hidden">
+                <div className="border-b border-slate-200 bg-slate-950 p-6 text-white">
+                  <p className="text-sm font-bold uppercase tracking-wide text-violet-400">
+                    {teamCount} joukkueen formaatti
+                  </p>
+
+                  <h2 className="mt-1 text-2xl font-bold">
+                    Pudotuspelipaikat
+                  </h2>
+                </div>
+
+                <div className="grid gap-4 p-6 sm:grid-cols-2">
+                  <QualificationCard
+                    position="1."
+                    teamName={
+                      fivePlusTeamStandingsReady
+                        ? firstPlace?.team.name ?? "Odottaa"
+                        : "Odottaa"
+                    }
+                    description="Välierä 1"
+                    highlight
+                  />
+
+                  <QualificationCard
+                    position="4."
+                    teamName={
+                      fivePlusTeamStandingsReady
+                        ? fourthPlace?.team.name ?? "Odottaa"
+                        : "Odottaa"
+                    }
+                    description="Välierä 1"
+                  />
+
+                  <QualificationCard
+                    position="2."
+                    teamName={
+                      fivePlusTeamStandingsReady
+                        ? secondPlace?.team.name ?? "Odottaa"
+                        : "Odottaa"
+                    }
+                    description="Välierä 2"
+                  />
+
+                  <QualificationCard
+                    position="3."
+                    teamName={
+                      fivePlusTeamStandingsReady
+                        ? thirdPlace?.team.name ?? "Odottaa"
+                        : "Odottaa"
+                    }
+                    description="Välierä 2"
+                  />
+
+                  {Array.from(
+                    { length: teamCount - 4 },
+                    (_, index) => {
+                      const position = index + 5;
+                      const eliminatedTeam = fivePlusTeamStandingsReady
+                        ? teamsWithStandings.find(
+                            (item) => item.standing?.position === position,
+                          )
+                        : undefined;
+
+                      return (
+                        <QualificationCard
+                          key={position}
+                          position={`${position}.`}
+                          teamName={eliminatedTeam?.team.name ?? "Odottaa"}
+                          description="Ei etene pudotuspeleihin"
+                          muted
+                        />
+                      );
+                    },
+                  )}
+                </div>
+              </Card>
+            </section>
+
+            <section className="mt-8">
+              <Card className="overflow-hidden">
+                <div className="border-b border-slate-200 bg-violet-50 p-6">
+                  <p className="text-sm font-bold uppercase tracking-wide text-violet-600">
+                    Välierä 1
+                  </p>
+
+                  <h2 className="mt-1 text-xl font-bold text-slate-950">
+                    1. sijoittunut vs 4. sijoittunut
+                  </h2>
+                </div>
+
+                <div className="p-6">
+                  {fivePlusTeamStandingsReady &&
+                  firstPlace &&
+                  fourthPlace ? (
+                    <SemiFinalForm
+                      tournamentId={tournament.id}
+                      number={1}
+                      teams={allTeams}
+                      existing={
+                        topFourSemiFinal1
+                      }
+                      initialTeamAId={
+                        firstPlace.team.id
+                      }
+                      initialTeamBId={
+                        fourthPlace.team.id
+                      }
+                      lockedTeams
+                    />
+                  ) : null}
+                </div>
+              </Card>
+            </section>
+
+            <section className="mt-8">
+              <Card className="overflow-hidden">
+                <div className="border-b border-slate-200 bg-violet-50 p-6">
+                  <p className="text-sm font-bold uppercase tracking-wide text-violet-600">
+                    Välierä 2
+                  </p>
+
+                  <h2 className="mt-1 text-xl font-bold text-slate-950">
+                    2. sijoittunut vs 3. sijoittunut
+                  </h2>
+                </div>
+
+                <div className="p-6">
+                  {fivePlusTeamStandingsReady &&
+                  secondPlace &&
                   thirdPlace ? (
                     <SemiFinalForm
                       tournamentId={tournament.id}
                       number={2}
                       teams={allTeams}
                       existing={
-                        fiveTeamSemiFinal2
+                        topFourSemiFinal2
                       }
                       initialTeamAId={
                         secondPlace.team.id
@@ -711,9 +718,9 @@ export default async function PlayoffsPage({
 
             <FinalSection
               tournamentId={tournament.id}
-              final={final}
-              teamA={finalTeamA}
-              teamB={finalTeamB}
+              final={finalForCurrentTeams}
+              teamA={fivePlusTeamStandingsReady ? finalTeamA : undefined}
+              teamB={fivePlusTeamStandingsReady ? finalTeamB : undefined}
               finalWinner={finalWinner}
               finalTie={finalTie}
               title="Finaali"

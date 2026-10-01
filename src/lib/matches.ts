@@ -112,6 +112,24 @@ export async function updateTournamentMatch(
   return updated;
 }
 
+export async function deleteTournamentMatch(
+  matchId: string,
+  tournamentId: string,
+): Promise<TournamentMatch | null> {
+  await requireAdmin();
+
+  const existing = await getTournamentMatchById(matchId);
+
+  if (!existing || existing.tournamentId !== tournamentId) {
+    return null;
+  }
+
+  await redis.del(matchKey(matchId));
+  await redis.srem(matchesKey(tournamentId), matchId);
+
+  return existing;
+}
+
 export function generateRoundRobinSchedule(tournamentTeamIds: string[]) {
   const ids = [...tournamentTeamIds];
 

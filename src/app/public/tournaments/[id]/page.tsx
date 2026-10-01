@@ -5,6 +5,7 @@ import { Card } from "@/components/Card";
 import { StandingsTable } from "@/components/statistics/StandingsTable";
 
 import { getPlayers } from "@/lib/players";
+import { getTournamentMatches } from "@/lib/matches";
 import { getTournamentPlayoffs } from "@/lib/playoffs";
 import { getTournamentStandings } from "@/lib/standings";
 import { getTeams } from "@/lib/teams";
@@ -28,12 +29,13 @@ export default async function PublicTournamentPage({
 }: PublicTournamentPageProps) {
   const { id } = await params;
 
-  const [tournament, teams, standings, playoffs, players] = await Promise.all([
+  const [tournament, teams, standings, playoffs, players, matches] = await Promise.all([
     getTournamentById(id),
     getTeams(),
     getTournamentStandings(id),
     getTournamentPlayoffs(id),
     getPlayers(),
+    getTournamentMatches(id),
   ]);
 
   if (!tournament) {
@@ -181,6 +183,63 @@ export default async function PublicTournamentPage({
               })}
           </div>
         </section>
+
+        {(tournament.mode === "live" || matches.length > 0) && (
+          <section className="mt-8">
+            <div className="mb-4">
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-violet-600">
+                Ottelut
+              </p>
+              <h2 className="mt-2 text-2xl font-black text-slate-950">
+                Pelatut ottelut
+              </h2>
+            </div>
+
+            {matches.length ? (
+              <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                <div className="divide-y divide-slate-100">
+                  {matches.slice().reverse().map((match) => {
+                    const teamA = tournamentTeamDetails.find(
+                      (item) => item.tournamentTeam.id === match.teamAId,
+                    )?.team;
+                    const teamB = tournamentTeamDetails.find(
+                      (item) => item.tournamentTeam.id === match.teamBId,
+                    )?.team;
+
+                    return (
+                      <div
+                        key={match.id}
+                        className="grid gap-2 px-4 py-3 sm:grid-cols-[10rem_1fr] sm:items-center sm:px-5"
+                      >
+                        <time className="text-xs font-medium text-slate-500">
+                          {new Date(match.playedAt).toLocaleString("fi-FI", {
+                            dateStyle: "short",
+                            timeStyle: "short",
+                          })}
+                        </time>
+                        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 text-sm">
+                          <span className="text-right font-semibold text-slate-950">
+                            {teamA?.name ?? "Joukkue A"}
+                          </span>
+                          <span className="rounded-lg bg-slate-100 px-3 py-1.5 font-black tabular-nums text-slate-900">
+                            {match.teamAScore} : {match.teamBScore}
+                          </span>
+                          <span className="font-semibold text-slate-950">
+                            {teamB?.name ?? "Joukkue B"}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <p className="rounded-xl border border-dashed border-slate-300 bg-white px-4 py-8 text-center text-sm text-slate-500">
+                Ei vielä tallennettuja otteluita.
+              </p>
+            )}
+          </section>
+        )}
 
         <section className="mt-8">
           <div className="mb-4">
