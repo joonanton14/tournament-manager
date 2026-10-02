@@ -112,7 +112,7 @@ export default async function HomePage() {
         <header className="rounded-3xl border border-violet-200 bg-[radial-gradient(circle_at_top_left,_rgba(167,139,250,0.22),_transparent_45%),linear-gradient(135deg,#0f172a,#111827)] p-6 text-white shadow-xl shadow-violet-900/10 sm:p-8">
           <div>
             <h1 className="mt-3 text-3xl font-black tracking-tight sm:text-5xl">
-              Turnausten yhteenveto
+              Turnaushistoria
             </h1>
           </div>
         </header>
@@ -193,11 +193,11 @@ export default async function HomePage() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <InfoChip label="Sijoitukset" value={String(latestTournament.standingsCount)} />
-                  <InfoChip label="Pudotuspelit" value={String(latestTournament.playoffCount)} />
+                  <InfoChip label="Pudotuspelit" value= "✓" />
                 </div>
 
                 <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-600">
-                  <p className="font-semibold text-slate-900">Päivämäärät</p>
+                  <p className="font-semibold text-slate-900">Ajankohta</p>
                   <p className="mt-2">
                     {formatDateShort(latestTournament.tournament.startDate)}
                     <span className="mx-2">→</span>

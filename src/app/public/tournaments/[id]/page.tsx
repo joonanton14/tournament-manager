@@ -134,7 +134,6 @@ export default async function PublicTournamentPage({
                 </div>
                 <div>
                   <h2 className="text-2xl font-black text-slate-950">{champion.name}</h2>
-                  <p className="mt-1 text-sm text-slate-600">Turnauksen voittaja</p>
                 </div>
               </div>
             </div>
