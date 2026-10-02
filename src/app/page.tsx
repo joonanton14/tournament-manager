@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { Card } from "@/components/Card";
 import { LeaderboardCard } from "@/components/LeaderboardCard";
-
+import { Analytics } from "@vercel/analytics/next"
 import { getPlayers } from "@/lib/players";
 import { getTournamentPlayoffs } from "@/lib/playoffs";
 import { getTournamentStandings } from "@/lib/standings";
